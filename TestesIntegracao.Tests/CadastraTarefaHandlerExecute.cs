@@ -21,6 +21,7 @@ namespace TestesIntegracao.Tests
                 , new DateTime(2021, 12, 31));
 
 
+
             //var repo = new RepositorioFake();//usando reposito fek
             var options = new DbContextOptionsBuilder<DbTarefasContext>()
                 .UseInMemoryDatabase("DbTarefasContext")
@@ -30,6 +31,7 @@ namespace TestesIntegracao.Tests
 
             var handler = new CadastraTarefaHandler(repo); //tratador comando
             
+
             
             //act
             handler.Execute(comando); //SUT >> CadastraTarefaHandlerExecute
@@ -38,6 +40,7 @@ namespace TestesIntegracao.Tests
             //Assert
             var  tarefa = repo.ObtemTarefas(t => t.Titulo == "Estuadar Xunit").FirstOrDefault();
             Assert.NotNull(tarefa); 
+
 
 
             //Criar Comando

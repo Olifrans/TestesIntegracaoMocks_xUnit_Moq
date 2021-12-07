@@ -26,6 +26,7 @@ namespace TestesIntegracao.Tests
             var saudCateg = new Categoria(4, "Saúde");
             var higiCateg = new Categoria(5, "Higiene");
 
+
             var tarefas = new List<Tarefa>
             {
                 //atrasadas a partir de 1/1/2019
@@ -60,8 +61,6 @@ namespace TestesIntegracao.Tests
             var tarefasEmAtraso = repo.ObtemTarefas(t => t.Status == StatusTarefa.EmAtraso);
             Assert.Equal(5, tarefasEmAtraso.Count());
         }
-
-
 
 
 
