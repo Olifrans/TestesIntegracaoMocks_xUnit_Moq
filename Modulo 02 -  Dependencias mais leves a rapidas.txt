@@ -1,0 +1,197 @@
+01 - Objetivos da aula
+PRÓXIMA ATIVIDADE
+
+Ao final desta aula você irá entender em que tipo de situações aplicar os dois primeiros padrões para simular recursos em seus testes de integração.
+
+
+
+02 - InMemoryDatabase
+Transcrição
+[00:00] Vamos para próxima aula. Então, nos vídeos anteriores, nós introduzimos o conceito de "teste de integração", que são testes onde nós precisamos testar classes que dependem de outros componentes e, muitas vezes, esses componentes são recursos que são caros, pesados e lentos, então nós precisamos substituir esses recursos por outros mais leves e rápidos.
+
+[00:24] E, como exemplo, nós usamos o repositório fake, onde nós precisamos criar uma classe que implementava a interface repositório tarefas e nós guardamos essas tarefas em memória. Mas, observe que eu tive que escrever essa classe.
+
+[00:42] Eu quero mostrar para vocês nesse vídeo que o próprio Entity framework Core já tem um recurso que nos possibilita fazer esse mesmo tipo de cenário. Substituir um banco de dados por alguma coisa mais leve e rápida para nós conseguirmos testá-lo.
+
+[01:01] Esse cara é um InMemory Database. Então, vamos conhecer como é que nós podemos usar ele aqui nesse vídeo. Então, repara o seguinte: eu vou abrir aqui o contexto onde nós temos a classe que faz o meio-campo entre as entidades que nós queremos persistir e o Entity Framework Core. E nesse contexto aqui, eu tenho justamente um momento onde eu digo que eu vou usar determinado provider de banco de dados. No caso, SQL Server com essa string de conexão.
+
+[01:34] Só que para usar o Inmemory Database, eu teria que fazer o seguinte: mudar essa opção, em vez de usar o SQL Server, usar um outro cara que, no caso, é o InMemory Database. Então, esse método configura o meu Entity Framework Core para usar esse cara.
+
+[02:04] Primeiro: esse método não está disponível porque ele está em um pacote separado. Não faz sentido esse método estar disponível no pacote geral, no pacote do Entity Framework Core, na parte do núcleo, porque você pode querer usá-lo ou não. Então, ele não está disponível ainda.
+
+[02:24] Segundo, eu não vou fazer essa configuração aqui na classe contexto, porque essa classe contexto é código de produção, então quando eu for colocar essa aplicação em produção, eu não quero usar o InMemory Database, eu quero usar o banco de dados real. Então, essa configuração que eu estou fazendo não vai ficar neste código aqui.
+
+[02:46] Mas observe que aqui nós temos no Entity Framework Core, um construtor que recebe algumas opções para nós configurarmos essa classe de contexto, e é esse recurso, essa facilidade, que eu vou usar para montar o meu cenário com o Inmemory Database.
+
+[03:05] Eu vou tirar esse cara daqui, foi só para mostrar para vocês, e vou voltar aqui para esse cara. Daqui a pouco, vamos ter que fazer uma mudança ali, mas por enquanto, está tranquilo aqui. Então esse cara aqui é o construtor, que recebe umas opções.
+
+[03:26] O meu repositório real, esse repositor tarefa, está criando a classe de contexto na mão. Nós já vimos que isso não é uma boa prática. Uma boa prática é você receber esse objeto, essa injeção, essa dependência que esse objeto tem, com algum mecanismo de injeção de dependência. E, no caso, nós estamos usando o construtor.
+
+[03:53] Justamente porque, olha só agora: como eu estou criando esse cara na mão, eu estou usando o construtor sem opções. Então, aqui: eu tenho um construtor que não recebe opção nenhuma e tem um construtor que recebe opção. Se eu estou criando isso na mão, eu escolhi usar sem a opção.
+
+[04:13] Se eu quisesse colocar uma opção aqui, eu teria que definir a opção e também um código de produção. Então, isso não está legal. Eu vou usar novamente a ideia da injeção de dependência por argumento do construtor. A mesma coisa que eu fiz para o repositório, estou fazendo aqui agora para a class de contexto do Entity Framework Core.
+
+[04:38] Fiz isso aqui. Então, agora, quem fornecer o repositório tarefa, precisa também ser encarregado de fornecer o contexto. Olha só aqui na classe de teste: está quebrando porque eu estou usando o repositório fake.
+
+[05:02] Mas faz sentido que, no cenário de teste, eu determine qual é o provider de banco de dados. E eu vou dizer que eu quero usar o Inmemory Database. Então, olha só o que eu vou fazer: agora eu não quero mais usar o repositório fake. Eu quero usar o repositório real.
+
+[05:30] Vou importar aqui do namespace infrastructure. Agora está dando erro porque eu preciso fornecer o contexto, preciso criar aqui qual é o contexto e, nesse contexto que eu vou criar, eu vou dizer justamente quais são as opções desse cara. Então aqui, eu estou montando todo o cenário na mão. “Ah, Daniel, mas isso é muito difícil, eu tenho que ficar escrevendo tudo isso na mão”.
+
+[06:03] Não. Não, porque eu estou agora tendo controle do cenário que eu estou querendo montar. Você precisa ter esse controle, porque você vai garantir que essas condições, pré-condições, que é justamente o objetivo de você ter o arranging, montar as pré condições para fazer o teste, aqui no act, estão seguindo exatamente o script que você queria.
+
+[06:30] Então, agora eu vou criar aqui as opções. Vou criar uma variável chamada options que será a seguinte: DbContextOptionsBuilder para DbDarefasContext. Esse DbOptionsBuilder não existe, eu vou importar aqui. Criei esse cara. E aqui, vai ter uma propriedade chamada "options" onde eu faço exatamente o build. Eu estou usando um método padrão builder para construir um objeto do tipo DbContextOptions.
+
+[07:08] Então, estou usando um padrão builder aqui e estou passando esse cara como argumento. Mas, por enquanto, eu não estou configurando nada aqui. Eu estou apenas usando o builder e chamando o método, a propriedade, options. Aqui, sim, eu preciso dizer, "UseInMemoryDatabase()".
+
+[07:31] Então, olha que interessante, aqui, nesse momento, eu estou nessa classe. Estou no meu projeto de teste. Essa classe está no projeto de teste. Então, nessa classe aqui, nesse projeto, eu vou instalar o pacote que tem o Inmemory Database. Eu não preciso instalar no código de produção que está aqui nesse projetinho de produção. Aqui, vai ficar o provider do SQL Server, realmente.
+
+[07:56] Então, aqui eu vou dizer que eu vou instalar via pacote do nugget o meu Microsoft, o nome dele é Microsoft Entity Framework Core. Então, eu vou instalar esse cara no meu processo de teste. Ele vai baixar, vai perguntar se você quer e vai instalar o cara para nós.
+
+[08:30] Vai dar um erro, ainda não tem, mas agora, nesse momento, já está encontrando. Mas esse Inmemory Database exige um argumento de entrada, que é justamente o nome que você quer dar para esse banco de dados. Você pode ter vários contextos e vários Inmemory Databases no seu cenário de teste.
+
+[08:56] Então, aqui eu quero identificar. Para mim, não faz muita diferença, porque nós só vamos ter um. Então, agora eu estou usando esse cara, eu estou criando uma opção de contexto que configura o Inmemory Database passando esse cara como argumento para criar o meu contexto e passando o contexto para o Repositório Tarefa.
+
+[09:22] Tudo isso aqui, código de produção, classe de produção, tarefas context, repositório tarefa. Não estou usando mais o repositório fake, observe isso. Então, eu não precisaria mais ter codificado este objeto leve e rápido para ser o dublê do meu teste.
+
+[09:41] Bom, vamos testar. Vamos ver o que é que que vai acontecer? Então, eu vou salvar aqui, vou pegar aqui o meu gerenciador de teste. Vou testar esse cara, e vocês vão ver, que nós vamos quebrar o teste. Deu erro de build, ainda, vamos ver o que está acontecendo.
+
+[10:07] Esse cara aqui ainda está criando o repositório tarefa na mão. Esse cara que executa o caso de uso"GerenciaPrazoDasTarefas". Tudo bem. O que eu vou fazer? O que é que eu faria? O que eu faria é isso aqui, injeção de dependência no construtor repositório.
+
+[10:37] É porque eu não tinha feito isso antes, mas vou fazer agora. Vamos ver se vai dar problema. Lista de erros, não há argumento fornecido. Agora o outro, nosso outro executor de caso de uso, repositório. Vou passar aqui. Então, agora eu estou injetando. Todos os meus executores de caso de uso estão recebendo um repositório no argumento do construtor.
+
+[11:07] Então, não tenho mais erros de compilação. Posso tentar executar o teste. Botão direito, executar teste. E como eu estava, está dando um erro aqui: o serviço com o Database provider InMemory e SQL Server foram registrados, mas é só é possível um provider no Entity Framework Core.
+
+[11:32] Como assim, Daniel? Como assim? O que é que está acontecendo? Então, olha só o meu teste. O meu teste está dizendo o seguinte: “contexto, use o meu Inmemory Database, usa esse cara nesse código que está sendo executado”.
+
+[11:57] Só que dentro do DB tarefas context, eu estou fazendo o seguinte: Use SQL Server. Então, agora uso o provider SQL Server? Então o erro que apareceu é justamente esse: você configurou dois providers quando, na verdade, só um pode ser registrado. Para qual banco eu vou persistir os dados? Vou ter que saber qual deles, só pode ser um.
+
+[12:24] Então, o que está acontecendo é que eu preciso ter alguma maneira de impedir que, se eu tiver configurado já o meu contexto, eu não precise usar essa configuração aqui. Essa aqui é uma configuração. E eu tenho justamente esse código já disponível, eu posso chegar aqui e fazer: if options builder.isconfigured, se tiver essa propriedade booleana dizendo que ele já está configurado, eu não posso fazer a configuração de usar o provider do SQL Server.
+
+[13:02] Então, o que posso fazer aqui é o seguinte: se estiver configurado, retorna, não faz nada. Sai do método e pronto. Eu posso fazer isso, ou posso fazer isso, também, é escolha de vocês. Posso botar se não estiver configurado, aí você vai configurar. Eu estou preferindo fazer assim, mas fica a gosto do freguês.
+
+[13:28] Então, vamos ver. Vamos executar aqui novamente o nosso teste. Eu acho que agora ele vai conseguir usar só um provider e vai usar justamente o provider InMemory. Então, agora, o teste está passando, porque está usando o InMemory Database.
+
+
+
+
+
+03 - Para usar InMemoryDatabase
+PRÓXIMA ATIVIDADE
+
+Com base nas afirmações abaixo, escolha a alternativa correta sobre os passos obrigatórios para usar o banco de dados em memória do Entity Framework Core.
+
+Instalar o pacote Microsoft.EntityFrameworkCore.InMemory
+Garantir que o contexto EF Core está sendo injetado e não criado "na mão" dentro do repositório
+No método de teste configurar as opções do contexto para utilizar o InMemoryDatabase
+No método OnConfiguring() verificar se as opções do contexto já foram configuradas através da propriedade IsConfigured
+Selecione uma alternativa
+
+Todas os passos são obrigatórios
+
+
+
+
+
+
+04 - Massas de Dados
+Transcrição
+[00:00] Vamos fazer mais um teste? Agora eu quero testar o caso de uso de gerenciar as tarefas em atraso. Então, eu quero pegar essa classe aqui e quero fazer um teste, na execução desse caso de uso aqui. Criar uma classe aqui, o nome dela vai ser GerenciaPrazoDasTarefasHandlerExecute. Aquela convenção de nomenclatura que nós temos utilizado, a classe subteste e método subteste.
+
+[00:40] Vou adicionar esse cara. Está aqui nossa classe e ela vai ter um teste. Preciso adicionar aqui o XUnit. "QuandoTarefasEstiveremAtrasadasDeveMudarSeuStatus" é o nome do teste. Novamente, podemos mudar isso ou não. Aqui ficou sobrando um colchete. Arrange act e assert.
+
+[01:41] Então, nesse cenário aqui, um cenário mais complexo, eu preciso que existam tarefas no meu banco de dados. O que é que vai acontecer nesse caso de uso? O caso de uso vai pegar as tarefas que existe no meu banco de dados, vai olhar para o prazo dessas tarefas e, dependendo da data e hora que você estiver, ele vai pegar as tarefas que estão atrasadas e vai colocar o status dela em atraso.
+
+[02:04] E nas tarefas que estão em dia, vai manter o status que já existe. Então, eu preciso de uma massa de dados para poder fazer isso. Imagine se eu tivesse que fazer isso com o banco de dados real, um SQL Server, Oracle, seja qual for. Eu teria que fazer os inserts, colocar tudo isso e depois me preocupar, se eu tivesse realmente que criar, de ter um cenário bastante isolado, eu teria que fazer os inserts, e depois que o teste acabasse, eu teria que fazer os deletes.
+
+[02:40] Imagine se eu tivesse que executar novamente esse método de teste aqui? Eu iria fazer insert, depois um novo insert. Provavelmente isso ia afetar as minhas verificações e tudo mais. Então, olha a vantagem que nós temos do InMemory Database. Nesse InMemory Databse, o contexto vai subir vazio e limpinho.
+
+[03:02] Então eu posso, nas minhas pré-condições de entrada, no meu arrange, montar essa massa de dados. Incluir essa massa de dados no banco, no Entity Framework, fazer os testes, as minhas verificações e pronto. Quando o método acabar, esse InMemory Database também vai morrer.
+
+[03:24] Então, eu posso criar massa de dados complexos aqui, justamente para poder fazer valer esses testes mais complicados. Então, a massa de dados que eu vou criar já foi copiada da área de transferência. Eu vou dar um "Control + V" aqui e vou fazer só os acertos aqui na importação dos namespaces específicos.
+
+[03:55] Então, eu criei cinco categorias, todas identificadas com o seu ID. E criei também uma lista de tarefas. Criei objetos em memória e agora eu preciso persistir esses objetos.
+
+[04:16] Para persistir esses objetos, eu quero fazer isso com o InMemory Database, eu vou criar o contexto com aquela configuração e vou criar o repositório para poder chamar justamente a persistência de tarefas. Vou escrever tudo aqui. Eu vou copiar esses caras aqui.
+
+[04:43] Então, o meu arrange é relativamente grande, mas é um cenário complexo. Então faz sentido ter um tamanho grande para o meu cenário. Eu criei o repositório e agora eu vou fazer o seguinte: o repositório, incluir tarefas, passando a lista de tarefas. Na verdade, eu preciso passar ela como um array.
+
+[05:11] Então, teoricamente, agora eu tenho o meu repositório com essa massa de dados, com essas categorias aqui. Inclusive isso pode ser legal para validar justamente se a sua modelagem, a sua configuração, as suas persistências, o mapeamento de suas persistências usando entity, se isso está funcionando.
+
+[05:37] Depois dessa massa de dados aqui, eu posso criar o meu comando. O comando agora, no caso, será GerenciaPrazoDasTarefas, esse é o comando que eu quero executar. Como não tem nenhum argumento de entrada, vou criar quem vai executar esse caso de uso. Passo das tarefas, handler. Isso aqui, passando um repositório como argumento, e o meu act vai ser "handler.Execute(comando)".
+
+[06:34] E qual a verificação que eu vou fazer? A verificação que eu vou fazer, é baseada nessa massa de dados aqui. Eu já até separei as tarefas que estão atrasadas e as tarefas que estão dentro do prazo, considerando uma data específica, 1º de janeiro de 2019. Então, tem um problema que é o seguinte: em nenhum momento eu estou dizendo qual é a data que eu quero considerar como data de corte, para considerar o que está atrasado do que está em dia.
+
+[07:06] Na verdade, isso é mais uma dependência que eu tenho para esse caso de uso especificamente. E, nós acabamos esquecendo muito dessa dependência da data e hora atual. Imagina que eu quero fazer um teste onde eu vou verificar se determinada lógica vai acontecer quando virar o dia. 11 horas da noite, aos 59 minutos e 59 segundos, quando bater mais um segundo, virou para o próximo dia e alguma lógica que vai acontecer nessa virada.
+
+[07:47] Então, eu vou ter que fazer esse teste. Se eu tiver que fazer esse teste agora, eu estou executando e gravando isso de manhã, eu teria que fazer o teste quando chegasse justamente esse horário. Mas esse horário é um horário que eu poderia também simular, não é isso?
+
+[08:07] Eu poderia dizer: “eu quero que você use a data e hora tal”. E eu não estou conseguindo fazer isso, porque o meu comando e o meu handler não estão recebendo essa data e hora atual. Quando eu abro aqui o "F12", a declaração da classe que representa aquele comando, olha o que está acontecendo aqui, eu estou pegando a data e hora do código, da execução desse código, e não é isso que eu quero.
+
+[08:30] Eu quero que isso seja uma dependência desse comando. Então, novamente, uma coisa importante que eu tenho para fazer aqui é extrair essa dependência. Vou extrair a dependência para o construtor do comando, não é do executor do caso de uso. E vou passar esse cara aqui. Então, no caso, "GerenciaPrazoDasTarefas(DateTime dataHoraAtual)".
+
+[09:07], Então, essa é a data e hora atual, porque aqui, eu estou considerando essas tarefas com essa data de corte, então eu quero especificamente determinar qual é essa data de corte. E o executor, nesse caso de uso, vai usar essa data para isso.
+
+[09:27] Então, repare que eu tenho tarefas que tem prazo em 2018, em 2017 etc. E tenho tarefas que aqui no caso, está concluído, então essa tarefa aqui não está mais atrasada, porque ela já foi concluída. Mas temos tarefas que estão depois de 2019, observe.
+
+[09:46] Então, essas tarefas não vão ser afetadas. E, se fosse o caso de eu usar a data e hora atual, eu teria uma verificação diferente dependendo da hora que eu executasse. Então, o meu teste, não está independente. A verificação que eu tenho que fazer aqui no final das contas é a seguinte: vamos pegar novamente as tarefas em atraso a partir do repositório.
+
+[10:23] Eu quero pegar as tarefas que atendem a seguinte condição "var tarefasEmAtraso = repo.ObtemTarefas (t => t.Status == StatusTarefa.EmAtraso)". Quero pegar essas tarefas que estão nesse repositório. E agora, eu sei, porque eu que criei essa massa de dados. Eu sei que as tarefas que estão atrasadas são: uma, duas, três, quatro, cinco. Não é isso? Eu tenho cinco tarefas que estão atrasadas.
+
+[10:53] Então, eu sei que o total de tarefas nessa lista deveria ser cinco e a lista são "tarefasEmAtraso.Count()", esse count está no link. Então, eu sei que depois que eu executar esse comando, essas cinco tarefas devem estar em atraso. Se não estiver, é porque o código está errado.
+
+[11:29] Observe que eu tenho um cenário bastante complexo, mas eu estou conseguindo fazer testes de forma rápida e barata, porque eu não estou tendo que fazer um insert. Não estou tendo que conversar com nenhum desenvolvedor para ele dizer: “não, gente, não faz teste nenhum agora não, hein? Porque eu vou rodar meus testes aqui, segura aí um pouco! Deixar o servidor limpinho!”.
+
+[11:50] Quantas vezes eu já vi testadores que ficaram "pistola" justamente porque sujaram a base de dados que a pessoa estava usando para testar. Então, nesse caso, nós conseguimos essa limpeza, esse isolamento necessário para esse teste.
+
+[12:15] Estou falando muito, mas será que vai realmente executar e vai funcionar esse teste? Vamos rodar para nós podermos ver. Pode ser que dê algum erro de configuração, mas vamos ver. Não. Funcionou direitinho. Com uma base de dados relativamente complexa, usando essas categorias, criei objetos com ID e tudo o mais.
+
+[12:40] Passei os valores exatos que eu queria. Tive que extrair a dependência da data e hora atual, que é uma coisa que às vezes nós esquecemos de fazer, mas é importante. Executei esse caso de uso e depois fiz a minha verificação e o teste passou de forma bastante rápida, 650 milissegundos sem usar o banco de dados real.
+
+
+
+
+
+05 - Recapitulando
+Transcrição
+[00:00] Vamos recapitular um pouquinho o que nós conversamos nessa aula. Fazendo um link, na aula anterior nós conversamos que os objetos que substituem aqueles recursos que são mais pesados são chamados de dublês, são objetos que simulam esses recursos, objetos mais leves e mais rápidos.
+
+[00:18] E, a partir dessa segunda aula, nós vamos conversar sobre alguns tipos específicos de dublês para testes. Cinco tipos específicos que nós vamos conversar nesse curso. Nessa aula, nós já mexemos em dois deles. O primeiro é o que é chamado de dummy object. Nós nem falamos sobre isso, mas nós já usamos. Esse objeto é justamente um objeto que nós precisamos criar, mas nós não vamos utilizar ele nos nossos testes.
+
+[00:51] Nós somos obrigados a criar ele, porque ele está dentro de alguma necessidade. Então, um exemplo que nós tivemos para mostrar esse dummy object foi justamente naquele nosso teste de cadastro de tarefa onde eu precisei criar uma categoria qualquer e ela não foi utilizada nos seus asserts, nas suas verificações.
+
+[01:12] Esse aqui é um dummy object. Eu precisei criar porque eu precisava criar, se não, não faria sentido passar esse comando CadastraTarefa. Outro exemplo de dummy object que nós acabamos fazendo é passando null para algum argumento de alguma função ou construtor, porque nós temos que passar. Então, esse é o dummy object.
+
+[01:38] Um outro tipo que nós falamos bastante tanto na aula anterior quanto nesta aula aqui, é o Fake Object. É uma classe que nós criamos ou usamos para simular algum recurso de forma mais rápida e leve. Então, na aula anterior, nós já falamos de fake object. Inclusive, colocamos o nome "fake" ou um repositório fake. Nós criamos uma classe, programamos uma classe que implementava. Tivemos todo o trabalho de fazer isso aqui.
+
+[02:13] Isso você pode levar tempo, dependendo do recurso que você tem, o recurso pode ser uma interface com muitos métodos. Isso pode levar tempo. Então, nós conhecemos um outro fake object famoso no mundo Entity Framework Core, que é o InMemoryDatabase. Para isso, nós precisamos fazer algumas mudanças.
+
+[02:40] Primeiro, começamos a injetar por a dependência do contexto no repositório tarefa. E na classe TarefasContext, nós fizemos uma mudança para verificar se aquele contexto que já tivesse sido configurado não ia usar a configuração do provider do SQL Server.
+
+[03:05] E no nosso método, antes, nós tínhamos o uso do repositório fake. Então, nós tínhamos aquela criação. Agora, nós temos um teste que é mais real. Nós estamos usando classes de produção. Mas agora, com uma configuração específica para usar o InMemoryDatabase. Então, foi isso que nós acabamos fazendo e foi o que nós conversamos nessa aula.
+
+
+
+
+06 - Faça como eu fiz na aula
+PRÓXIMA ATIVIDADE
+
+Chegou a hora de você fixar os conhecimentos apresentados nessa aula implementando todos os passos que realizei durante os vídeos.
+
+injete a dependência do contexto como argumento do construtor de RepositorioTarefa
+no projeto de testes, instale o pacote para utilizar o InMemoryDatabase
+crie um teste de cadastro de tarefas configurando as opções do contexto para usar o InMemoryDatabase
+crie um teste de gerenciamento de tarefas atrasadas que exija um cenário mais complexo e defina sua massa de testes correspondente
+
+
+
+07 - Projeto atual
+PRÓXIMA ATIVIDADE
+
+Baixe o código com o que fizemos até aqui!
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/02/testes-integracao.video2.2.zip
+
+
+
+08 - O que aprendemos?
+PRÓXIMA ATIVIDADE
+Nessa aula você aprendeu que o EF Core disponibiliza uma estratégia para você realizar testes que dependam de banco de dados. Com isso pode criar massas de dados que materializem cenários complexos e ao mesmo tempo garantem testes isolados e independentes.

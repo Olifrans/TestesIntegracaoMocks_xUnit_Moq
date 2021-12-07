@@ -1,0 +1,48 @@
+01 - Objetivos da aula
+PRÓXIMA ATIVIDADE
+
+Nessa aula você vai aprender o que fazer quando seus cenários de testes exigem recursos que injetem informações específicas, exceções ou falhas. Com isso vai conhecer mais um padrão de simulação nos testes de integração.
+
+
+
+02 - Lançando exceções
+Transcrição
+[00:00] No nosso teste do comando CadastraTarefa, nós só estamos testando o cenário feliz. E se tiver algum problema, aconteceu alguma exceção aqui na execução desse comando? De repente, o banco de dados fica fora do ar ou então algum problema de dado, enfim. Alguma exceção foi lançada na execução desse comando. Como é que nós temos que fazer?
+
+[00:26] Eu perguntei para o cliente e o cliente falou o seguinte: quando isso acontecer, você tem que dizer que o resultado da execução desse comando falhou, deu algum tipo de problema. Então, você tem que dizer que o resultado agora foi bem-sucedido ou não foi bem-sucedido.
+
+[00:51] Então eu preciso, a partir dessa nova pergunta: “o que eu tenho que fazer quando uma exceção acontece?”, fazer um redesign aqui na minha solução. Vamos começar fazendo um teste primeiro, e nós vamos ver como nós temos que fazer um design.
+
+[01:08] Lembre-se daquele curso de teste unitário onde nós falamos que os nossos testes ajudam, antes de você escrever códigos de produção, no design da sua aplicação. Então, vamos usar essa prática: TDD. Vou criar um teste aqui, e vou colocar o nome dela como o seguinte "QuandoExceptionForLancadaResultadoIsSucessDeveSerFalse".
+
+[02:11] Então eu já estou colocando aqui algumas coisas que eu estou pensando para o design. Então, eu vou copiar o começo desse cenário, só para nós termos um ponto de partida mais rápido. Então, eu estou criando uma tarefa, um comando que vai cadastrar uma tarefa. Configurei meu repositório, estou usando o repositório fake, nesse caso.
+
+[02:58] Então, o design é o seguinte: eu tenho que ter agora um retorno para esse método. Nesse método, se eu apertar "F12" ele não tem retorno, void. Nesse caso, eu preciso mudar. Agora eu estou fazendo um novo design.
+
+[03:09] Então, eu vou colocar: "var resultado = handler.Execute(comando)". E eu já vou falar qual é a classe, qual é o tipo, que vai ser uma classe chamada "ComandResult". Esse Command Result vai ter que ser retornado pelo meu execute aqui. E a minha verificação? A minha verificação vai ser "Assert.false(resultado.IsSucess)".
+
+[03:47] Foi o que nós falamos ali: resultado e sucesso deve ser falso. Então, está aqui a verificação, o resultado desse tipo que nós ainda não criamos. Então, vamos continuar. Vamos criar esse cara. Esse Command Result faz parte do meu core. Pode fazer, mas pode fazer também do services. Eu não sei ainda onde é que eu vou colocar, mas vou deixar aqui. Vamos lá, vou deixar aqui e depois nós discutimos, se for o caso. Eu acho que não vai ter necessidade de nós discutirmos onde colocar essa classe por algum outro motivo.
+
+[04:30] Então, esse cara possui uma propriedade booleana chamada is success. Eu não vou poder nem insertar ele. Ele vai ter um construtor que define se foi bem sucedido ou não. Então, já tem essa classe aqui. Ela já sendo reconhecida aqui, e na execução do meu CadastraTarefaHandler eu vou retornar esse Command Result aqui.
+
+[05:13] Agora, já tenho compilação funcionando. Não, ainda não. Não está compilando ainda. Vou colocar aqui Return New Command Result True. Agora meu código vai passar a compilar, "Control + Shift + B". Vamos ver se está tudo certo. Não está. Está com erro, por quê? Qual é o erro? É no projeto web api.
+
+[06:03] Não quero fazer a compilação do web api agora. Quero compilar o teste, tudo bem? O teste compilou. Não vou compilar a solução como um todo. Vou compilar só um teste, porque não está na hora de ver a questão do api. Então, se eu rodar esse novo teste, ele vai falhar usando a nossa prática tdd. Vai falhar porque eu estou esperando falso e ele vai retornar true.
+
+[06:38] Então, o que é que eu vou fazer aqui agora? Nesse cara eu vou colocar um "try", "catch (Exeption e)". Nesse caso aqui, eu vou dar um "return new ComandResult(false)". E esse código todo aqui que está efetivamente persistindo a nossa tarefa, veio para dentro do try catch.
+
+[07:15] Não vou mais fazer o lançamento. Eu não vou relançar a exceção, vou deixar aqui. Porém, não adiantou nada. Não adiantou nada, porque continuo com problemas no teste, pois ainda continua retornando true. Eu ainda não lancei a exceção, onde é que eu vou lançar essa exceção?
+
+[07:40] Então repara aqui que nesse repositório fake, eu posso, no incluir tarefas, chegar aqui "throw new Exception("Houve um erro ao incluir as tarefas")". Estou lançando a exceção aqui. E quando eu executar agora o meu teste para ver a exceção, o teste está funcionando.
+
+[08:26] Só que tem um problema, se eu executar esse teste aqui, eu acho que voltei a executar com repositório fake. E agora, eu tive um problema. Por quê? Eu estou chamando o repositório fake e o Cadastra Handler, no execute dele. Ele está chamando o Incluir Tarefas deste repositório fake que lança a exceção.
+
+[09:03] Então, eu consegui inserir, lançar a exceção e testar a questão das exceções em um teste, mas eu quebrei outros testes. Então, vamos agora tentar ver o que é que eu posso fazer para configurar esse lançamento de exceção no meu setup, no meu arrange. Então eu quero que esse cenário aqui, especificamente, configure o lançamento da exceção e não no repositório.
+
+[09:43] O repositório tem que continuar sem nenhum problema de lançamento de exceção. E outro detalhe: eu não quero usar o repositório fake, eu quero usar o nosso repositório normal, nosso repositório de tarefa aqui. Então, o repositório de tarefa que recebe o contexto.
+
+[10:09] Ele está aqui. E esse aqui, também, vai usar o repositório tarefa. Eu preciso copiar novamente esse código aqui. Passar o repositório como argumento do construtor.
+
+[10:42] Então, desse jeito aqui, eu estou usando agora o repositório de produção. Vou testar os meus dois aqui: um vai falhar e outro vai funcionar. Então, o que é que está acontecendo? Deixa eu testar esse cara aqui para não ter aquilo do agenciamento de prazos.
+
+[11:08] O que está acontecendo aqui é que eu não estou lançando exceção no repositório de tarefa, e eu não posso lançar mesmo. Isso aqui é um código de produção. Eu tenho que fazer com que a exceção seja configurada, seja arranjada, nesse código. No código do cenário de teste. É o cenário de teste que vai ter que dizer "nesse momento eu vou lançar uma exceção". Como que eu faço isso?

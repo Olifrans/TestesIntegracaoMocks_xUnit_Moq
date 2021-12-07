@@ -1,0 +1,346 @@
+01 - Introdução
+
+Transcrição
+[00:00] Sejam bem-vindos a mais um curso da plataforma Alura. Meu nome é Daniel Portugal e talvez vocês já me conheçam de outros cursos da plataforma dot.net. E nesse curso, eu quero apresentar para vocês testes de integração com C#, XUnit e Moq Framework.
+
+[00:17] Para contextualizar o teste de integração dentro da ideia de "testes", quero mostrar para vocês o seguinte: vocês já conheceram o teste de unidade usando o TDD e o Framework XUnit. Depois, vocês conheceram teste de interface do usuário usando Selenium Web Driver. E agora, eu quero mostrar para vocês os testes de integração, onde você precisa testar classes que dependem de outros componentes.
+
+[00:48] E, em geral, esses componentes são mais pesados. E o que você precisa fazer? Dando um spoiler, quando você encontra esse tipo de problema, você tem que testar uma classe que depende de um banco de dados, por exemplo, você substitui esse componente por uma versão mais leve.
+
+[01:09] Exatamente como você vê no cinema, onde se têm uma atriz ou um ator cuja utilização numa cena é arriscada, você substitui esse atriz ou ator por um dublê. Aqui também faremos isso. Nós vamos conhecer vários tipos de "dublês" para testes. E um desses tipos é o Mock. E como ferramental, nós vamos usar o XUnit, que já conhecemos bastante, com o Framework Moq.
+
+[01:38] Os exemplos que nós vamos usar para conhecer mais esse assunto são classes que dependem de bancos de dados usando Entity Framework Core e classes que também são controladores do Aspnet Core. O curso é muito rápido, fique tranquilo. Você vai fazer com um pé nas costas. Eu espero que você tenha ficado curioso. Se você ficou, venha comigo para o próximo vídeo.
+
+
+
+
+
+02 - Objetivos do curso
+PRÓXIMA ATIVIDADE
+
+Veja os principais objetivos desse curso:
+
+conceituar testes de integração
+empregar injeção de dependência para para tornar suas classes mais fáceis de serem testadas
+conhecer os principais padrões utilizados para simular as dependências de suas classes
+usar uma biblioteca (Moq) para facilitar a configuração e verificação de seus testes de integração
+utilizar o recurso InMemoryDatabase para simular um banco de dados em aplicações com EF Core
+aplicar os conceitos aprendidos para testar controladores AspNet Core
+Ficou curioso? Bora lá!
+
+
+
+
+03 - Objetivos da aula
+PRÓXIMA ATIVIDADE
+
+Ao final desta aula você estará apto para responder as seguintes perguntas:
+
+O que são testes de integração?
+Qual a principal estratégia para aplicar injeção de dependência em suas classes?
+
+
+
+
+04 - Preparando o Ambiente
+Transcrição
+[00:00] Vamos começar o nosso curso falando um pouco sobre o que vocês vão precisar para poder acompanhar o curso. Então, vocês vão ter um exercício onde irão baixar o projeto inicial. Antes tem que descompactar esse projeto inicial em algum lugar. Eu descompactei nessa pasta aqui. Abrirei ele com o Visual Studio 2019, mas também dá para usar no 2017, caso você não quiser baixar o de 2019.
+
+[00:31] Então, eu estou usando aqui o Visual Studio 2019, que é a versão para vocês. 16.2.1, no momento de gravação desse curso. E a a instalação que eu preciso desse Visual Studio é uma instalação bem básica. Precisa de desenvolvimento web, de desenvolvimento para plataforma dot.net Core e precisa também do C#, da linguagem C#.
+
+[00:59] Então, naquele Visual Studio installer, vocês vão poder marcar essas opções. Vamos falar um pouco do projeto. Vou fechar ele. E no projeto nós temos a solução, que tem duas pastas: uma pasta chamada de src, de source, e uma pasta chamada "testes", onde nós vamos colocar o projeto de teste.
+
+[01:26] Na pasta source, onde tem o nosso código de produção, nós vamos pegar isso aqui e fazer um deploy. Nós temos aqui quatro projetos: o primeiro projeto é justamente o Core, o núcleo da nossa aplicação, a aplicação que nós vamos desenvolver, na verdade, é uma parte muito pequena de uma aplicação de tarefas. Em outras palavras, de coisas a fazer.
+
+[01:54] E temos aqui tanto algumas classes de modelo, quanto algumas outras classes que eu já vou explicar qual é o propósito delas aqui. Estou chamando elas de comandos. Depois, nós temos o projeto que vai representar a infraestrutura que eu preciso para esse projeto, especificamente a parte de banco de dados.
+
+[02:18] Nós estamos usando o Entity Framework Core, e temos aqui uma abstração que é o repositório de tarefas, uma interface. Nós falaremos disso com calma, depois. Em seguida, nós temos a camada de serviços, o projeto chamado Services, que representa a camada de serviços.
+
+[02:37] E ela tem basicamente três classes que implementam e executam esses comandos aqui, os que foram definidos aqui na camada de núcleo. Então, agora eu posso falar um pouco dessas classes aqui. Essas três classes representam caso de uso, que eu tenho na minha aplicação.
+
+[03:01] Então, a minha aplicação tem três casos de uso: primeiro é cadastrar uma tarefa ou incluir uma tarefa. Segundo é gerenciar o prazo das tarefas. Vou abrir aqui a caixa para você ver. Essa classe representa o caso de uso onde você vai verificar se aquela tarefa já está atrasada ou não.
+
+[03:24] E tem um caso de uso que é um auxiliar, onde nós obtemos uma categoria, um objeto, uma instância de um objeto categoria através do seu identificador. Isso vai aparecer em outras situações e outros objetos também, mas, por enquanto, o que nós precisamos são esses três casos de uso aqui.
+
+[03:44] Esses comandos, essas classes que estão aqui, elas não são ainda a execução dos casos de uso. Essas classes representam apenas as informações que são necessárias para esse caso ser executado. Então quem executa esse caso de uso fica justamente aqui na camada de serviço.
+
+[04:03] Então aqui, repare que eu tenho um para um: uma classe cadastra a tarefa, handler, que é o manipulador, é o cara que lida e que executa esse caso de uso da tarefa. E esses outros dois, respectivamente, os outros dois.
+
+[04:18] E, por fim, nós temos a camada de interface do usuário que, nesse caso, é uma aplicação web, e essa aplicação web, por enquanto, ela tem o controlador home controller que foi gerada a partir da criação desse projeto no Visual Studio, eu não mexi nesse home controller, então eu nem sei o que é que tem aqui ainda, mas nós criamos um controlador de tarefas que apenas tem um endpoint responsável pelo cadastramento de atividades.
+
+[04:54] É ele que vai iniciar o caso de uso de cadastramento de tarefas. E ele é um controlador de api, o qual você vai chamar a barra tarefas usando o verbo post. Post/tarefas, passando algumas informações relativas a tarefas e ele vai executar esse caso de uso, se tudo der certo, ele vai dar ok.
+
+[05:19] Então, nós temos uma aplicação do início ao fim, mas apenas uma fatia dessa aplicação que nós já vamos usar para poder mostrar os conceitos que vamos aprender aqui no curso de testes de integração.
+
+[05:37] Então, reparem que nós temos vários projetos aqui e esses projetos representam camadas. E agora, nós queremos testar as camadas relativas à execução desse caso de uso e a execução também desse controlador, desse end point que está no controlador. Então, nós vamos ver como que fazemos para testar tanto um controlador de um api, quanto o controlador de uma classe que depende de outros objetos. No caso, do banco de dados, ali.
+
+
+
+
+
+05 - [OBRIGATÓRIO] Projeto inicial
+PRÓXIMA ATIVIDADE
+
+Baixe a solução que iremos estudar nesse curso aqui.
+
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/01/testes-integracao.projeto-inicial.zip
+
+
+
+
+
+06 - Testando recursos caros
+Transcrição
+[00:00] Então, nós iremos começar criando um projeto de teste para testar o caso de uso "cadastra tarefa". Vou clicar com o botão direito aqui, adicionar, novo projeto. Eu quero um projeto do XUnit, próximo, o nome que eu vou dar vai ser "AluraCoisasAFazerTestes" e vou colocar ele dentro da pasta "testes".
+
+[00:25] Seleciono a pasta, criar. Ele já colocou uma classe de teste para nós, com o nome Space XUnit. Então, o que eu quero fazer é criar nossa tarefa. Como isso é feito nesse sistema aqui? Eu tenho que criar um comando e depois eu tenho que executar esse comando.
+
+[00:57] Esses dois são classes, cada um é um objeto. Vou ter que criar dois objetos: um para representar o comando e outro para representar o cara que vai executar esse comando. Lembre-se sempre, eu vou bater sempre nessa tecla nas nossas fases, arrange act e acerte.
+
+[01:21] Então, esse teste inicial é um teste bem básico, que é o seguinte: dado informações de tarefas, o título da tarefa, uma categoria, e o prazo para essa tarefa, eu quero que ela apareça no banco de dados. Então, olha só: o meu arranjo vai ser primeiro criar o comando que é new CadastraTarefa.
+
+[01:55] Esse cara aqui, se eu apertar o control, vai exigir que eu adicione uma referência ao projeto AluraCausasAFazerCore. Então, eu vou aproveitar e fazer isso. Observe que além de ter importado esse namespace aqui em cima da minha classe, ele também adicionou uma referência para o projeto Core.
+
+[02:19] Então, isso preenche automaticamente. Esse cara aqui, ele tem um construtor que exige três argumentos: o primeiro argumento é o título tarefa, então, Estudar XUnit. E a categoria, eu vou criar: New categoria. Vou empurrar também esse name space, e a categoria vai ser Estudo, é um Construtor que pede como argumento uma string com a descrição da categoria.
+
+[02:53] E, por fim, eu vou criar uma data que representa o prazo dessa tarefa e eu vou colocar aqui 31 de Dezembro de 2019. Quero quebrar automaticamente, para vocês poderem enxergar isso aqui.
+
+[03:28] Então eu criei o meu comando e agora eu vou criar o tratador desse comando, o handler. E esse cara é o CadastraTarefaHandler. Vou importar aqui novamente, ele vai importar o user e também vai colocar mais um projeto aqui como referência para o nosso teste.
+
+[03:52] E esse cara é um construtor que não precisa de argumento nenhum. Esse é meu arrange. Meu act é justamente o handler.execute. Aqui, eu vou executar e vou passar como argumento qual é o comando com suas informações para serem executados.
+
+[04:12] Então, esse é o primeiro teste que nós vamos fazer. Meu assert vai ser a tarefa foi cadastrada no banco de dados com o título Estudar XUnit, com a categoria estudo, com o prazo 31 de dezembro de 2019. Esse é o assert que eu quero fazer. Mas cadê o meu banco de dados? Como é que eu vou verificar isso aqui?
+
+[04:36] Vamos primeiro ver se nós conseguimos executar esse cara. E eu vou tentar fazer, só para dizer que vai passar esse teste. Assert true, passando true. Então, agora eu quero executar esse teste: botão direito, executar os testes, vai compilar todos e vai abrir o nosso gerenciador de testes. Abriu. E já abriu com erro.
+
+[05:14] Vamos ver o que é que está acontecendo aqui: Invade operation exception. Não foi definido um provider para o banco de dados. Na verdade, o ado.net exige que você configure um provider. Qual banco de dados você vai usar? SQL Server? Oracle? MySQL? Qual banco de dados? É o provider que vai dizer. E nós não temos na nossa aplicação, ainda, uma configuração para dizer: “você vai usar especificamente este banco de dados”, não tem isso.
+
+[05:49] Então, nós precisamos configurar isso, nosso teste falhou por conta disso. Outro problema que eu quero resolver aqui rapidamente é a nomenclatura. A nomenclatura não está me dizendo nada, aqui. Então, vou resolver essas duas coisas.
+
+[06:10] Então, a primeira coisa é acertar o nome. Vou renomear o arquivo onde tem a classe de teste. Nós vamos usar a nomenclatura já dos cursos anteriores que nós estamos fazendo de teste no C Sharp.
+
+[06:34] O nome da classe, respectivamente, do arquivo, vai ser o nome da classe sobre teste e o método que está sendo testado. Então, basta você olhar aqui, no act. Esse act vai ter que ser igual para todos os testes desta classe. Então a classe sob teste é CadastraTarefaHandler e o método sob teste é o execute.
+
+[07:14] Então o nosso sistema under, System under test, é o CadastraTarefaHandler Execute. Esse cara vai se transformar no nome da classe e no nome do no nosso arquivo de unidade de compilação. O Visual Studio 2019 não tem essa refatoração que o 2017 tem, que quando você muda lá, ele tenta mudar também o nome da classe. Ele não tem isso.
+
+[07:47] Então, agora eu mudei aqui na mão, e o nome do meu teste é DadaTarefaComInformacoesValidasDeveIncluirNoBanco. A princípio, é o nome que eu estou dando aqui, mas depois nós podemos refatorar e rever se realmente essa é o assert que nós estamos fazendo. Mas as informações são essas, as informações são válidas e eu quero que isso seja incluído no banco através desse comando aqui.
+
+[08:21] Não preciso nem executar. Quando eu já olhar aqui para o meu gerenciador de testes, ele já vai ter reconhecido essa mudança de nome. Primeira coisa legal.
+
+[08:33] Então agora eu vou configurar o provider, o meu provider aqui para o meu banco de dados. Então, onde é que eu vou configurar esse provider? Eu vou configurar esse provider na infraestrutura, no contexto. Aqui no meu contexto, eu vou dizer que, eu vou usar o banco de dados SQL Server.
+
+[08:56] Então aqui vou fazer um over ride ou um configure. E esse é um configure. Eu vou usar uma configuração chamada UseSQL Server, onde eu passo como argumento a string de conexão para esse SQL Server.
+
+[09:18] A string de conexão, é assim: Server. Vou usar aqui meu localdb mssqllocaldb; qual é o nome do banco de dados? Database vai ser igual a =dbtarefas. E como eu vou me conectar a esse banco de dados? Vou usar a mesma conta do Windows. TrustedConnection=true, então usa conexão. Confie na conexão que você já tem, como o Windows.
+
+[09:56] Então, eu estou agora configurando o meu provider. Vamos tentar executar novamente? Vou chegar aqui, executar testes selecionados, vou deixar aqui ele aberto, vamos ver o que é que vai acontecer. Está tentando executar e deu erro.
+
+[10:25] Qual é o erro que aconteceu? Vamos ver. Vou colocar aqui embaixo para vocês verem. E a mensagem é a seguinte: não foi possível abrir o banco de dados. O login failed. Na verdade, login failed para esse usuário, que é esse usuário aqui da minha máquina, essa credencial não foi aceita, mas na verdade esse banco de dados não existe.
+
+[10:50] Esse banco de dados aqui, se você olhar aqui para exibir, pesquisador, SQL Server, Object Explorer, aqui eu tenho uma visão de todos os bancos de dados que eu tenho acessíveis para minha máquina. E esse aqui é o banco de dados que eu estou usando, localdb, MYSQL, localdb. É o SQL express que vem com o Visual Studio.
+
+[11:17] Nos bancos de dados que eu tenho aqui, eu tenho um banco de dados daquele curso interior, leilões db, mas eu não tenho ainda o db tarefas. Então, eu terei que criar aqui esse banco de dados para, aí sim, poder realizar esse meu teste.
+
+[11:37] Mas pensa um pouco comigo aqui. Repare que eu estou tentando fazer um teste que exige um recurso da minha máquina. No caso da minha máquina, que é um banco de dados. Eu preciso ter, primeiro, o servidor, que é o SQL Server Express, que já está disponível.
+
+[12:00] Preciso agora ter o banco de dados instalado. E esse é um recurso que demora um pouco, não é uma coisa que rapidamente eu vou conseguir incluir. Então, esse teste que nós estamos fazendo aqui é um teste um pouco diferente dos daquele curso de teste de unidade que nós vimos.
+
+[12:22] É um teste que roda só em memória. Basicamente, nós fazemos os testes olhando apenas para essa camada de domínio. Nesse caso aqui, nosso teste depende de um recurso que é caro. E ele vai demorar para ser executado, acessado.
+
+[12:45] Então, quando nós temos esse tipo de situação, o que pode acontecer é que eu compartilhe esse recurso. Pode ser um banco de dados, pode ser um sistema de arquivos, pode ser um servidor web. Então, quando esse recurso é mais caro, o que acontece é que eu vou compartilhar esse recurso. Então vários desenvolvedores vão olhar para esse recurso, vão usar esse recurso.
+
+[13:10] E eu resolvo, por um lado, um problema de dividir um pouco esse custo, mas, por outro lado, agora eu vou ter o problema de saber se o que os dados que estão nesse banco de dados, estão, de fato, de forma que eu consiga fazer os meus testes com um cenário que eu gostaria.
+
+[13:33] Então, imagine que eu crie um cenário. Vou no banco de dados, faço essas inclusões para ele poder ser utilizado nesse teste especificamente, mas um outro testador está testando também naquele banco de dados e fez um teste de exclusão de tarefa e acabou excluindo meu cenário.
+
+[13:54] Se ele está sendo compartilhado, eu vou ter agora esse problema de conflito de cenários. Então, como que eu faço para resolver esse problema? Como eu consigo, ao mesmo tempo, testar, eu quero a execução deste comando, mas sem ter esses problemas do recurso que é caro ou então quando está compartilhado, haver conflito de interesses? Como eu faço para resolver isso?
+
+
+
+
+
+
+07 - Dependência ou Morte
+
+Transcrição
+[00:00] A minha classe que executa o comando CadastraTarefaHandler, repare que ela precisa de uma implementação da interface e repositório da tarefas. Só que essa classe que executa esse comando, está criando a implementação dentro de si mesma, um construtor. Então, o que está acontecendo aqui é que essa classe está rígida, ela está completamente amarrada à implementação de iRepositório de tarefas chamada repositório de tarefa.
+
+[00:47] E essa implementação é justamente aquela implementação que usa esse contexto que, por sua vez, está configurando o SQL Server. Então, esse cara precisa flexibilizar justamente essa implementação. Como é que eu flexibilizo isso? Basta eu receber um objeto que implementa iRepositório tarefa aqui no argumento do construtor.
+
+[01:23] Então, agora a classe CadastraTarefaHandler não seria mais responsável por criar essa implementação de irepositório tarefa. Ela simplesmente vai dizer: “para você me criar, criar um objeto na minha classe, você precisa fornecer uma implementação de iRepositórios tarefas”.
+
+[01:53] Na prática, eu vou colocar isso aqui. Eu vou criar esse cara aqui, estou copiando e colando, e vou chamar esse argumento de "repositório". No lugar de ter esse new repositório tarefa, eu vou ter esse cara aqui. Essa é a modificação que eu estou fazendo. Então, agora eu não digo mais qual é a implementação de iRepositório tarefa. Eu estou simplesmente recebendo isso como argumento.
+
+[02:25] Então, esse é o primeiro passo que nós vamos precisar fazer sempre quando nós precisarmos testar classes que dependam de outros recursos. Você vai precisar fornecer um mecanismo onde essa dependência fica explícita e eu possa flexibilizar a implementação.
+
+[02:49] Daniel, eu estou vendo que existe também um outro cara chamado iLog, que é a classe que faz log, que loga as operações que estão acontecendo no TarefaHandler, e nesse caso, também estou criando uma implementação específica no construtor. O que eu faço? A mesma coisa.
+
+[03:07] Se a sua classe depende também de outro objeto, você também vai explicitar essa dependência no construtor. Então, eu vou chegar aqui, vou copiar esse cara também, e vou colocar como segundo argumento aqui do meu construtor. Então, eu agora não tenho mais esse new aqui também.
+
+[03:36] Dado o primeiro passo, agora nosso teste vai começar a quebrar. Não vai nem compilar, porque agora, quando eu estou criando o meu cadastro da TarefaHandler, eu preciso passar as implementações específicas de iRepositório de tarefas e iLogger para aquele CadastraTarefaHandler execute.
+
+[03:55] Repare que agora o meu cenário está ainda mais rico. No meu cenário, eu vou dizer qual é o repositório de tarefas que eu vou usar no teste e qual é o logger que eu vou usar no teste. Então, o meu cenário não é apenas as informações da tarefa. Mas o cenário também é qual é o repositório e qual é o logger.
+
+[04:21] E eu vou passar esses caras aqui. Eu vou criar uma variável que vai representar esse repositório e ele vai ser o repositório com esse banco de dados caro, do SQL Server, que nós não temos nem criado na nossa máquina? Ora, se esse repositório é uma implementação de uma interface, eu posso criar um objeto que simule esse repositório.
+
+[04:52] Basta implementar a interface iRepositório tarefas. Vamos ver se você vai entender aqui. Eu vou criar uma classe e vou chamar essa classe de repositório fake. E vou deixar ela implementando iRepositório de tarefas.
+
+[05:33] Vou importar aqui o namespace, e agora, haverá uma reclamação porque essa classe ainda não implementou esses caras. Agora, eu tenho uma classe fake que implementa o iRepositório tarefas. E olha que interessante: eu posso passar essa classe aqui como argumento do meu construtor. Então, agora eu tenho controle. Eu, como testador, na minha classe de tester, tenho controle de qual é o repositório.
+
+[06:09] Não é mais o banco de dados que está na máquina, o SQL Server. Eu estou usando o iRepositório fake, e onde é que ele vai guardar as tarefas? Pode ser memória, pode ser numa lista de tarefas, por que não? Então, eu assumi o controle. Eu, como testador, assumi o controle do cenário de teste.
+
+[06:30] E, por outro lado, o desenvolvedor, o cara que implementou essa classe, perdeu o controle de qual é o repositório. Então, nós falamos que houve uma inversão de controle, que é o padrão chamado ioc.
+
+[07:00] Agora quem controla é quem está provendo o cenário e o desenvolvedor, o cara que tem o código de negócio, simplesmente deixou de ter esse controle e agora está declarando essa dependência através da classe do construtor.
+
+[07:18] Bom, isso é uma coisa. Eu estou usando agora o iRepositório fake. E agora, eu preciso passar também um logger para esse cara. Como eu não estou querendo resolver a questão do logger neste momento, vou dar um "Control + Z" aqui e vou deixar esse cara ainda fixo.
+
+[07:49] Quando chegar a hora de testar a parte de logger, nós iremos resolver esse problema também, e nós vamos usar isso para fixar essa ideia. Bom, então agora meu cenário está completo, eu posso executar meu teste novamente. Vocês vão ver que vai dar erro, mas agora o erro está na minha mão.
+
+[08:11] Olha o erro: método, operação, não foi implementado. Olha onde é que aconteceu esse erro: aconteceu no repositório. Eu estou com o repositório na mão. Então, o que eu posso fazer aqui agora é implementar uma solução fake para fazer isso funcionar.
+
+[08:31] Olha só: vou criar uma lista de tarefa aqui e vou inicializá-la. Está vazia e aqui no incluir tarefas, eu vou colocar essa tarefa. Aqui é um array, então eu vou pegar esse array, tarefas, vou converter ele para uma lista e tenho que importar o link. Vou fazer um for each, onde eu vou adicionar cada tarefa na lista.
+
+[09:10] Então, agora, eu implementei o meu repositório fake, que é um repositório que está guardando a lista de tarefas e memória. Para esse teste aqui funciona tranquilamente. Eu não estou querendo testar o banco de dados, eu estou querendo testar a execução do comando CadastreTarefa. Esse comando tem que executar. E nós agora já começamos a pensar como que nós vamos fazer o assert.
+
+[09:39] Agora eu vou testar. Vou abrir aqui, vou executar esse cara, vai rodar, e olha: passou o teste. Passou o teste porque eu estou roubando ainda aqui no meu assert. Mas eu já posso agora pensar em como eu vou verificar esse cara aqui. Olha só, olha que interessante.
+
+[10:02] Eu vou verificar. Eu estou com um repositório na mão, não estou? Então, eu posso fazer o seguinte: "var tarefas = repo.ObtemTarefas(t => t.Título == "Estudar Xunit")". Então, eu estou pegando do meu repositório uma tarefa. "FirstOrDefaut()" tem que importar o link aqui. Estou pegando a lista de tarefas cujo título é Estudar Xunit e pegando a primeira que vier.
+
+[10:57] E eu quero verificar se essa tarefa não pode ser nula, porque esse repositório agora precisa ter essa tarefa, tarefa no singular. Então, já tem uma verificação real para esse teste aqui. Dado uma tarefa com informações válidas, quando chama a execução do comando que cadastra a tarefa, ela tem, agora, que aparecer no repositório. Se está usando o banco de dados, memória, não interessa para mim nesse teste aqui.
+
+[11:33] Vamos testar? Vamos ver o que vai acontecer? Vocês vão ver que vai dar erro. Por quê? Porque o método obtém tarefas não foi implementado. Então, o que é que eu posso fazer aqui? "return lista.Where(filtro)". Agora eu estou implementando, estou com ele na mão. Vamos executar novamente o teste?
+
+[12:02] Executando o teste e o teste passou. Então agora, eu executei um teste onde eu extrai a dependência de um recurso caro e lento, que é um banco de dados. Trouxe isso para minha mão e coloquei esse repositório no repositório em memória. Porque o meu teste não é o banco de dados. O meu teste é justamente para saber se aquele comando vai executar.
+
+
+
+
+
+
+
+
+
+08 - Primeiro Passo
+PRÓXIMA ATIVIDADE
+
+Veja o código da classe abaixo. Você deseja realizar testes que usem um objeto dessa classe. Assinale a alternativa que representa o primeiro passo para isso.
+
+public class GeradorDePDF
+{
+    IProcessadorDeCapitulos _processador;
+
+    public GeradorDePDF()
+    {
+        _processador = new ProcessadorHTML();
+    }
+
+    //outros métodos aqui...
+
+}COPIAR CÓDIGO
+Selecione uma alternativa
+
+Explicitar a dependência da classe com um objeto que implemente IProcessadorDeCapitulos.
+
+public class GeradorDePDF
+{
+    IProcessadorDeCapitulos _processador;
+
+    public GeradorDePDF(IProcessadorDeCapitulos proc)
+    {
+        _processador = proc;
+    }
+
+    //outros métodos aqui...
+
+}
+
+Criar o método de teste.
+
+[Fact]
+public void DadoDocumentoHTMLValidoDeveGerarPDF()
+{
+    //código de teste aqui...
+}
+
+Explicitar a dependência da classe com ProcessadorHTML.
+
+public class GeradorDePDF
+{
+    IProcessadorDeCapitulos _processador;
+
+    public GeradorDePDF(ProcessadorHTML proc)
+    {
+        _processador = proc;
+    }
+
+    //outros métodos aqui...
+
+}
+
+
+
+
+
+
+
+09 - Recapitulando
+Transcrição
+[00:00] Vamos fazer aqui, então, uma recapitulação do que nós aprendemos.Foram várias coisas que eu falei, quero pontuar algumas que são importantes para nós continuarmos nas próximos aulas.
+
+[00:13] No teste de integração nós queremos testar componentes, classes que se integram com alguns recursos, e esses recursos são lentos e são caros. Então, banco de dados, serviço de e-mail, serviços FTP, serviços web, sistema de arquivo, outras bibliotecas.
+
+[00:39] Como é que nós conseguimos testar esse tipo de coisa? Temos que fazer dois passos. O primeiro passo é você explicitar essa dependência, isso tem que ficar explícito para a classe que vai utilizar essa dependência.
+
+[01:01] E isso é feito através de algum mecanismo de injeção de dependência. Em inglês, dependence injection. No nosso exemplo, nós usamos a injeção de dependência mais comum, que é injetar a dependência pelo construtor.
+
+[01:17] Então aqui, no construtor de CadastraTarefaHandler, nós colocamos a necessidade de se passar uma implementação de iRepositórios tarefas. Essa tarefa handler, então, se isentou de criar essa implementação da interface. Então, esse é o primeiro passo.
+
+[01:41] O segundo passo é justamente você simular essa dependência. E agora você pode, no seu teste, pegar isso e criar uma simulação para essa dependência. Então, o que é que nós fizemos? Nós criamos um iRepositório fake que implementava aquela interface e nós colocamos esse repositório, as informações de tarefas, em memória.
+
+[02:10] E implementamos dois métodos desse repositório, que é a inclusão e a listagem, a obtenção das tarefas, para justamente fazer o assert. Então, esse conceito, quando nós criamos um objeto que simula uma dependência, no mundo dos testes é chamado de dublê. Dublê de teste. É a mesma coisa que acontece no cinema, quando você tem algum ator que é muito famoso, caro e é arriscado para ele fazer algum tipo de cena. Então você tem o dublê daquele ator, um cara mais ou menos parecido.
+
+[02:48] Aqui, nós também temos essa mesma situação. Nós temos um recurso que é caro e é arriscado você utilizar, então você simula essa dependência através de um dublê de teste.
+
+[03:05] E com isso, com esses dois passos, o que nós acabamos tendo é justamente uma inversão no controle. Antes, você tinha a própria classe de negócio controlando qual era aquela dependência, qual era aquela implementação específica de dependência.
+
+[03:23] E agora, nesse momento, nós flexibilizamos isso. Nós passamos o controle para o cenário, para a classe que vai usar a CadastraTarefaHandler. No nosso exemplo, é o teste, mas em um outro cenário de negócio, pode ser o controlador web que vai usar esse CadastraTarefaHandler para poder executar o comando. Então, ele vai ser encarregado de passar a implementação.
+
+[03:55] Mas isso fica flexível, então essa inversão de controle é benéfica, porque ela flexibiliza as dependências e nós conseguimos agora testar essas classes que dependem de outros componentes, com mais rapidez e de forma mais barata.
+
+
+
+
+
+
+
+
+10 - Faça como eu fiz na aula
+PRÓXIMA ATIVIDADE
+
+Chegou a hora de você fixar os conhecimentos apresentados nessa aula implementando todos os passos que realizei durante os vídeos.
+
+Crie uma classe para testar o cadastro de tarefas
+Refatore a classe CadastroTarefasHandler para receber a dependência do repositório em seu construtor
+Crie um repositório fake para simulá-lo e finalizar os testes necessários
+
+
+
+
+11 -Projeto atual
+PRÓXIMA ATIVIDADE
+
+Baixe o código com o que fizemos até aqui!
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/01/testes-integracao.video1.4.zip
+
+
+
+
+12 - O que aprendemos?
+PRÓXIMA ATIVIDADE
+
+Nessa aula você aprendeu:
+
+o conceito de testes de integração, injeção de dependência e inversão de controle
+a principal estratégia para aplicar injeção de dependência em suas classes, que é através de argumentos no construtor
+a criar objetos leves que simulam recursos caros e lentos como por exemplo um banco de dados
