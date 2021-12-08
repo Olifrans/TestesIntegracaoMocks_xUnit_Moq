@@ -46,3 +46,161 @@ Transcrição
 [10:42] Então, desse jeito aqui, eu estou usando agora o repositório de produção. Vou testar os meus dois aqui: um vai falhar e outro vai funcionar. Então, o que é que está acontecendo? Deixa eu testar esse cara aqui para não ter aquilo do agenciamento de prazos.
 
 [11:08] O que está acontecendo aqui é que eu não estou lançando exceção no repositório de tarefa, e eu não posso lançar mesmo. Isso aqui é um código de produção. Eu tenho que fazer com que a exceção seja configurada, seja arranjada, nesse código. No código do cenário de teste. É o cenário de teste que vai ter que dizer "nesse momento eu vou lançar uma exceção". Como que eu faço isso?
+
+
+
+
+
+
+
+03 - Setup da exceção
+Transcrição
+[00:00] Para nós configurarmos a exceção, justamente nesse cenário aqui, nós vamos começar a utilizar uma biblioteca que vai ser responsável por simular esses objetos no nosso lugar. Então, agora nós estamos criando esses objetos fake, o InMemoryDatabase e o próprio repositório fake. Nós estamos colocando esses objetos no cenário de teste. Nós vamos passar agora essa responsabilidade para a biblioteca. Essa biblioteca se chama Moq.
+
+[00:32] E justamente essa biblioteca, além de possibilitar a criação desses objetos, também possibilita que você configure como esse objeto vai se comportar para cenários específicos. Então, é isso que nós queremos. Esse objeto que vai ser criado aqui pelo Moq, ele lança uma exceção quando o incluir tarefas for chamado.
+
+[00:57] Então, eu vou instalar aqui essa biblioteca. A parte do NuGet. Moq, o nome dela é “m” “o” “q”. Vou instalar aqui, depois aceitar. Então agora eu já tenho esse cara aqui disponível para mim no projeto de teste. Vou aproveitar e importar logo aqui o namespace moq. E agora, vamos começar a usar esse cara.
+
+[01:29] Então, como eu falei, eu não vou mais me responsabilizar por criar os objetos fake. Eu vou deixar para a biblioteca moq. Para esse cenário, especificamente. Em outros cenários, eu posso querer usar aquele objeto fake. É um exemplo do gerencia prazo. Eu estou criando uma massa de dados complexa aqui e eu quero usar o InMemoryDatabase, por que não?
+
+[02:01] Mas para esse caso aqui, onde eu preciso configurar a exceção, eu vou passar a bola para o moq. Como é que funciona esse cara? Primeiro eu vou criar uma variável aqui que vai receber um objeto do tipo Mock " var mock = new Mock". E esse objeto do tipo moq, esse construtor, precisa de saber qual moq que ele vai fazer, para qual tipo.
+
+[02:24] No caso nosso aqui, é o "iRepositórioTarefas". E, por fim, eu preciso pedir para o mock agora me dizer o seguinte: ""me dá um objeto que está sob sua responsabilidade". Então a propriedade object nos dá um objeto daquele tipo que foi mockado.
+
+[02:50] Então, primeiro eu crio um objeto tipo mock para o tipo que eu quero mockar e depois eu pego um objeto desse tipo através da propriedade object. Entre essas duas situações, a criação e pegar o objeto, eu posso fazer as configurações que eu quiser. No nosso exemplo, eu vou fazer a configuração de lançamento da exceção.
+
+[03:14] Então, como que eu faço isso? Eu vou falar o seguinte "mock.Setup(r => IncluirTarefas()).Throws(new Exception("Houve um erro na inclusão de tarefas")". Pronto.
+
+[03:48] Então, eu estou configurando aqui como esse mock vai se comportar neste cenário. Tem mais uma última definição que eu preciso fazer aqui que é a seguinte: esse objeto, esse método de incluir tarefas, tem como argumento um array de tarefas. Então, eu preciso dizer para o meu mock que a exceção vai ser lançada para qualquer array de tarefas que for chamado.
+
+[04:18] Eu faço isso através de uma estrutura que o próprio mock me dá, que é uma classe chamada "it". Essa classe tem um método chamado "It.IsAny<Tarefa[]>()))", e ele precisa perguntar qual é o tipo de objeto que eu vou obter. No caso, um array de tarefa.
+
+[04:43] Então, a leitura dessa configuração aqui é a seguinte: "mock, faz um setup para quando o método "incluir tarefas" for chamado para qualquer argumento de entrada do tipo array de tarefas, você vai lançar uma exceção." Exceção do tipo exception, e o objeto é esse aqui: new exception.
+
+[05:14] Configura. Configurou aqui, e a partir disso, eu pego o objeto e passo ele como argumento do meu executor. Nesse caso, de uso CadastraTarefasHandler. Agora, eu já tenho condição de testar. Vou aqui no meu testador, vamos no "quando exception for lançada".
+
+[05:37] Então, vou executar este cara. E, agora, passou a funcionar. Ou seja, a exceção foi lançada. Vamos abrir aqui o execute. A exceção foi lançada no momento da inclusão da tarefa. E eu capturei essa exceção aqui. E retornei um Command Result com reach success falso. Ou seja, não foi bem sucedido a execução desse comando. E eu peguei isso na verificação, verifiquei aqui que era falso reach success.
+
+
+
+
+
+
+
+
+
+
+
+04 - Erro no banco de dados
+PRÓXIMA ATIVIDADE
+
+Débora deseja simular o lançamento de uma exceção no cadastramento de uma tarefa. Para isso irá "mockar" um repositório de tarefas usando a biblioteca Moq (ela já instalou o pacote corretamente). Contudo está confusa com o código que deve escrever na linha com o comentário CODIGO 1 e na linha com o comentário CODIGO 2. Você pode ajudá-la?
+
+Veja seu código a seguir:
+
+[Fact]
+public void QuandoLancarExcecaoIsSuccessDeveRetornarFalse()
+{
+    //arrange
+    var comando = new CadastraTarefa("Estudar Xunit", new Categoria("Estudo"), new DateTime(2019, 12, 31));
+    var mock = new Mock<IRepositorioTarefas>();
+    //CODIGO 1
+    var repo = //CODIGO 2 
+    var handler = new CadastraTarefaHandler(repo);
+
+    //act
+    var resultado = handler.Execute(comando);
+
+    //assert
+    Assert.False(resultado.IsSuccess);
+}COPIAR CÓDIGO
+Selecione uma alternativa
+
+Codigo 1:
+
+mock.Throws(new Exception("Houve um erro na inclusão de tarefas"));
+Código 2:
+
+var repo = mock.Object;
+
+Codigo 1:
+
+mock.Setup(r => r.IncluirTarefas(It.IsAny<Tarefa[]>()))
+    .Throws(new Exception("Houve um erro na inclusão de tarefas"));
+Código 2:
+
+var repo = mock.Object;
+
+Codigo 1:
+
+mock.Setup(r => r.IncluirTarefas(It.IsAny<Tarefa[]>()))
+    .Throws(new Exception("Houve um erro na inclusão de tarefas"));
+Código 2:
+
+var repo = mock.CreateObject();
+
+
+
+
+
+
+
+
+
+05 - Recapitulando
+Transcrição
+[00:00] Só para nós recapitularmos o que nós conversamos nessa terceira aula. Nós conhecemos mais um tipo do nosso dublês para testes. E esse tipo, é chamado de stub, stubs. Qual é a diferença desses stubs para esses outros caras aqui?
+
+[00:18] No caso, o stub é aquele onde você precisa fornecer alguma informação de entrada, algum dado de entrada para o seu teste. O nosso exemplo foi justamente o lançamento de uma exceção. Então, eu precisei mockar um objeto, precisei simular um objeto e dizer que o comportamento dele para determinado método. No caso aqui, o incluir tarefas seria o lançamento de uma exceção.
+
+[00:52] Então, quando acontecesse, quando o teste fosse executado, essa exceção iria ser lançada. Então, um stub, simula um objeto, um recurso que nós precisamos testar. Mas nós precisamos configurar algumas informações de entrada para sensibilizar o nosso cenário de teste, o nosso teste.
+
+[01:16] Então essa é a diferença do stub. Olhando para o dummy, ele é um objeto que você cria, mas você não vai utilizar num evento qualquer. O fake é um objeto leve que você cria e ele vai ser utilizado do jeito que ele está, sem nenhum tipo de configuração. E o stub é isso: você cria um objeto, nós estamos agora usando agora aqui a biblioteca Mock para isso, e você configura umas informações que vão ser usadas para o teste.
+
+[01:53] Então, a configuração se dá, no caso da biblioteca Mock, entre a criação do mock e a obtenção do objeto. E toda essa estrutura de mock é feito, é claro, na fase de arrange, na fase onde você define as pré-condições para o teste ser realizado.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+06 - Faça como eu fiz na aula
+PRÓXIMA ATIVIDADE
+
+Chegou a hora de você fixar os conhecimentos apresentados nessa aula implementando todos os passos que realizei durante os vídeos.
+
+Crie um teste para simular uma exceção lançada ao usar o banco de dados
+Instale o pacote Moq para facilitar nossa vida na hora de simular o repositório e lançar a exceção
+crie um objeto do tipo Mock, configurando quando a exceção será lançada através do método Setup()
+obtenha o "mock" através da propriedade Object
+
+
+
+
+
+
+
+
+07 - Projeto atual
+PRÓXIMA ATIVIDADEs
+Baixe o código com o que fizemos até aqui!
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/03/testes-integracao.video3.2.zip
+
+
+
+
+
+
+
+08 - O que aprendemos?
+PRÓXIMA ATIVIDADE
+
+Nessa aula você conheceu o padrão Stub, utilizado para injetar informações específicas nos cenários de testes. Para facilitar a configuração desses cenários você instalou e utilizou o framework Moq. Vamos conhecer mais essa biblioteca nas próximas aulas!

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.InMemory;
+using Moq;
 using TestesIntegracao.Core.Commands;
 using TestesIntegracao.Core.Models;
 using TestesIntegracao.Infrastructure;
@@ -64,22 +65,38 @@ namespace TestesIntegracao.Tests
 
 
 
-        //[Fact]
-        //public void AoExecutarDeveAtualizarTarefasNoRepo()
-        //{
-        //    //arrange/setup do mock
-        //    var dataHoraAtual = new DateTime(2019, 1, 1);
-        //    var mock = new Mock<IRepositorioTarefas>();
-        //    var repo = mock.Object;
-        //    var comando = new GerenciaPrazoDasTarefas(dataHoraAtual);
-        //    var handler = new GerenciaPrazoDasTarefasHandler(repo);
+        [Fact]
+        public void QuandoInvocadoDeveChamarAtualizarTarefasNaQtVezesDoTotalDeTarefasAtrasadas()
+        {           
+            //arrange >>comando >>Duplê Teste >>  Stubs Object -- Configurado na fase de  Arrange
+            var categ = new Categoria("Dummy");
+            var tarefas = new List<Tarefa>
+            {
+                //atrasadas a partir de 1/1/2019
+                new Tarefa(1, "Tirar lixo", categ, new DateTime(2018,12,31), null, StatusTarefa.Criada),
+                new Tarefa(4, "Fazer o almoço", categ, new DateTime(2017,12,1), null, StatusTarefa.Criada),
+                new Tarefa(9, "Ir à academia", categ, new DateTime(2018,12,31), null, StatusTarefa.Criada),
+            };
 
-        //    //act
-        //    handler.Execute(comando);
+            var mock = new Mock<IRepositorioTarefas>();
+            mock.Setup(r => r.ObtemTarefas(It.IsAny<Func<Tarefa, bool>>()))
+               .Returns(tarefas);
+            var repo = mock.Object;
 
-        //    //assert
-        //    mock.Verify(r => r.AtualizarTarefas(It.IsAny<Tarefa[]>()), Times.Once());
-        //}
+            var comando = new GerenciaPrazoDasTarefas(new DateTime(2019, 1, 1));
+            var handler = new GerenciaPrazoDasTarefasHandler(repo);
+
+            //act --> SUT >> CadastraTarefaHandlerExecute
+            handler.Execute(comando); 
+
+            //assert
+            mock.Verify(r => r.AtualizarTarefas(It.IsAny<Tarefa[]>()), Times.Once());
+            
+        }
+
+
+
+
 
     }
 }

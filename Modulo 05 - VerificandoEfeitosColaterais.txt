@@ -1,0 +1,202 @@
+01 - Objetivos da aula
+Existem situações em que precisamos testar se determinada ação gerou um determinado resultado indireto no nosso sistema. Considere o requisito não-funcional bastante comum de gerar logs das operações do sistema...
+
+Como testar se o log foi realmente gerado ao executar uma operação?
+Ao final dessa aula você vai conhecer o último (e mais complexo) padrão de simulação e irá usar o Moq para configurar e verificar a existência de mensagens de log.
+
+
+
+02 - Mensagens de log
+Transcrição
+[00:00] Sejam bem-vindos de volta. Agora, vamos para mais uma aula e eu quero que nós agora observemos um pouco os testes naquele gerenciador de caso de uso CadastraTarefa. Então, no nosso CadastraTarefaHandlerExecute, que é a classe de teste para esse handler, nós temos dois testes. Um teste para o caminho feliz, quando nós colocamos informações válidas de uma tarefa. E temos também o outro caminho, quando acontece uma exceção na hora de fazer a inclusão da tarefa no repositório.
+
+[00:43] Agora, eu estou com uma outra demanda. Um teste, verificação para fazer, que é uma necessidade bastante comum a um tipo de perfil de usuário do arquiteto ou do cara que vai dar manutenção nessa aplicação. Então, tanto o arquiteto tem essa necessidade, quanto o cara que vai fazer a manutenção, um cara que tem um perfil de DevOps.
+
+[01:20] E a demanda é quando a execução desse caso de uso for feita, eu preciso que essa operação seja logada e eu tenha essa informação para uma análise futura. Então, se tiver algum erro, eu quero que isso apareça no log. Se alguma operação for feita com sucesso, eu quero que apareça no log.
+
+[01:52] Você pode estar se perguntando assim: “Daniel, será que eu não posso estar colocando essa verificação aqui também?”. E Por conversão, nós podemos até fazer isso. Mas eu prefiro seguir algumas convenções de teste. Prefiro fazer um teste separado.
+
+[02:24] Sempre quando você tiver uma verificação diferente, você vai criar um teste diferente. Aqui nesse caso, o arrange e o act vão ser muito parecidos, mas o assert é diferente. Então aqui, o perfil da pessoa que está testando, querendo verificar, é o perfil do cara que produziu esse código.
+
+[02:54] Então, nós vamos colocar isso num método separado. Vamos lá. Vou criar esse teste aqui. E olha o nome, já muda um pouco, "QuandoExceptForLancada", as pré-condições são as mesmas. O teste é mesmo CadastraTarefaHandlerExecute, mas as condições de saída que eu quero verificar são diferentes.
+
+[03:23] "QuandoExceptionForÇLancadaDeveLogarAMensagemDaExceção". Então, já que as condições de entrada são iguais e o método sob teste é igual, eu vou copiar esse cara e vou colocar aqui.
+
+[03:54] Mas agora o assert, como eu falei, é diferente. Então, pergunta: "como que eu agora vou verificar se aquilo foi gravado no log? Se aquela mensagem apareceu no log no momento em que eu fiz esse teste.
+
+
+
+
+
+
+
+03 - xtraindo pra capturar
+Transcrição
+[00:00] Para nós podermos verificar se essa mensagem de log foi realmente gerada quando a exceção ocorreu, eu preciso ter acesso ao log. E olha só como é que está: eu não tenho aqui nesse momento nada disponível, nada que me faça pegar esse log aqui. Isso está acontecendo e não sei se você vai lembrar, mas na primeira aula, nós deixamos de extrair a dependência de log para justamente fixar esse conhecimento aqui.
+
+[00:33] Então, a ideia é o seguinte: sempre que você tiver que testar alguma dependência, alguma coisa que dependa de outra, você precisa que essas dependências fiquem explícitas. Então,observe que na declaração da classe CadastraTarefaHandler, que ela tem uma dependência de dois objetos, o primeiro, iRepositório tarefas, está devidamente explicitado no seu construtor. A famosa injeção de dependência.
+
+[01:03] Só que o objeto que guarda o log não está explicitado. Ele está inclusive sendo criado na mão aqui. E isso impede que eu faça os meus testes. Agora chegou o momento de justamente verificar se a mensagem log foi feita no meu teste. E eu não consigo colocar a mão nesse log para poder fazer as verificações.
+
+[01:28] Então, a primeira coisa, o primeiro passo de um teste de integração é você conseguir extrair as dependências. Eu vou usar a injeção de dependência aqui para isso. CadastraTarefaHandler. Eu vou deixar de criar esse cara aqui na mão e vou colocá-la como argumento do meu construtor. Isso vai quebrar alguns testes. Tudo bem, nós temos que refazer, não tem jeito.
+
+[01:55] Então, está aqui meu logger recebendo como argumento esse cara. Eu estou passando ele para cá. Então, agora, meu CadastraTarefaHandler explicitou todas as dependências que ele tem no construtor. Então, está pedindo nos argumentos do construtor as suas dependências.
+
+[02:19] Como eu falei, agora vai quebrar um, dois e três testes, porque ele precisa de uma instância do ilogger. Como que eu imputo uma instância de ilogger para esse CadastraTarefaHandler? É simples, nós vamos usar o mock para isso. Nesse exemplo aqui, eu estou usando o InMemoryDatabase para gerar o repositório. Tudo bem, aqui eu não estou usando mock nem nada.
+
+[02:54] Mas eu vou usar o mock para passar um objeto, uma instância de ilogger de CadastraTarefaHandler. Então, eu vou criar um mock aqui. Crio o mock para ilogger de CadastraTarefaHandler. E preciso importar aqui, o namespace estava Microsoft Extensions Logging e aqui no meu repositório, eu vou simplesmente passar o objeto para esse cara aqui. Passou a não quebrar mais a compilação.
+
+[03:35] Não sei se vai dar problema na execução, isso é uma coisa que agora nós vamos precisar verificar. Vamos logo verificar isso? Vou executar apenas esse teste aqui para ver se vai ter algum problema na execução desse teste. Deu erro de build, porque eu ainda preciso fazer a mesma coisa para os outros.
+
+[04:02] Então, aqui eu vou criar um outro mock. Nesse exemplo aqui, o legal é que eu consigo mostrar que eu posso precisar de mais de um objeto mockado, mais de uma instância de objetos mockados. E eu tenho que fazer isso assim "(repo, mockLogger.Object)".
+
+[04:36] Não quebrou esse e agora aqui também, deixa eu usar este cara aqui. Bom, agora não vai mais dar erro de compilação, mas eu não sei se vai executar o teste. Então, eu vou executar esse primeiro aqui que nós tínhamos visto. Selecionei ele aqui e apertei o executar teste. Ele vai compilar, mas eu não sei se ele vai funcionar a execução.
+
+[05:10] Esse cara aqui funcionou. Se eu tentar executar todo mundo dessa classe, CadastraTarefaHandler, também vai funcionar. Porque quando a exception for lançada deve logar a mensagem da exceção. Mas eu ainda não fiz nenhum assert para esse cara. Está passando porque eu não estou fazendo assert nele.
+
+[05:41] Então, o que é que eu vou fazer aqui? Preciso fazer a verificação aqui no mocklogger. Então "mocklogger.verify(1 => 1.LogError()". E aqui, eu tenho que passar qual é a mensagem "Houve um erro", para não ter que ficar escrevendo de novo esse cara aqui, eu vou guardar essa mensagem também, "mensagemDeErroEsperada = "Houve um erro na inclusão de tarefas". Então, esta aqui vai ser a mensagem de erro. Eu vou pegar ela e vou guardar aqui.
+
+[06:32] Vou passá-la aqui, e também aqui. Vou passar aqui, mensagem de erro esperada. O que mais? Aqui eu preciso que esse cara tenha sido gerado. Isso aqui foi chamado "Times.Once()".
+
+[07:03] Então, eu acho que agora nós conseguimos testar, vamos recapitular aqui: eu tive primeiro que extrair a dependência do logger, do meu CadastraTarefaHandler. E, para isso, quebrei os testes que eu estava fazendo, porque agora eu preciso fornecer um objeto que implementa a ilogger de CadastraTarefaHandler.
+
+[07:25] Então, nos testes eu estou fornecendo uma instância desse cara mockado, tanto para os dois testes anteriores, como para o teste que eu quero fazer justamente a verificação da mensagem. E a verificação da mensagem está aqui, verificar a mensagem log error for chamada para essa mensagem específica aqui, apenas uma única vez.
+
+[07:55] Então, agora eu vou executar. Vamos ver o que é que vai acontecer. Vai dar erro, eu acho, porque não está logando essa mensagem. Deu erro aqui. Mas, olha o que está acontecendo. Nós vamos conhecer um pouquinho uma limitação da nossa biblioteca. Nós sempre vamos encontrar limitações no uso das bibliotecas, então nós precisamos agora tentar entender um pouquinho. Vamos olhar a documentação da biblioteca, procurar nos fóruns, stack overflow, por exemplo, como nós superamos essas limitações.
+
+[08:29] Qual é a limitação que está aparecendo aqui? Na verdade, o método log error é um método de extensão. E a biblioteca moq, com “q”, diz que "extension methods" não podem ser usados nas verificações de setup e verificação.
+
+[08:59] No caso, log error é uma extensão. Eu não consigo fazer a verificação em método de extensão usando a biblioteca moq. Então, como é que eu faço para superar essa limitação?
+
+
+
+
+
+
+
+04 - Superando a limitação do Moq
+Transcrição
+[00:00] Nós estamos com problema aqui. A biblioteca Moq, não consegue usar métodos de extensão nas expressões de setup e verificação, como tínhamos visto aquele erro. Então, para superar essa limitação, o que nós vamos ter que fazer é usar o método, de fato, sem ser o método de extensão.
+
+[00:25] E o método que a interface ilogger tem é o método log. Então, nós vamos ter um pouco mais de trabalho para poder entender um pouco como é que funciona esse método, mas é assim que nós vamos superar essa limitação.
+
+[00:43] Eu vou escrever aqui. Vamos ver aqui o que é que esse cara aqui precisa. Então, eu vou passar o mouse por cima para vocês verem que este método precisa de vários argumentos de entrada. Então, LogLevel primeiro cara aqui. Log level é justamente o nível de log que eu estou querendo verificar se foi chamado.
+
+[01:19] No nosso caso, é o log de erro. Então nós vamos ter um LogLevel de error ali. Event ID é justamente o ID, o identificador daquele acontecimento. Para nós não interessa qual é o identificador, não sei nem se ele é passado no momento do log. Então, nós vamos usar justamente aquela do "it is any", pode ser qualquer um.
+
+[01:43] O estado é justamente a mensagem que nós queremos, o objeto que está sendo logado. No caso, é a mensagem "Houve um erro na inclusão de tarefas". A exceção é a exceção que foi lançada. Nós também vamos querer capturar essa exceção. E, esse último argumento é uma função que pega esse objeto que foi logado e a exceção e transforma isso numa string.
+
+[02:13] Então, é uma função que faz isso. É um delegate que pega dois argumentos de entrada do tipo TState, que é tipo do objeto que está sendo logado. Pega a exceção, combina esses cara de alguma maneira e coloca numa string, que é justamente o que vai se transformar a mensagem de log.
+
+[02:37] Então, assim, eu não quero saber dessa função. Na verdade, eu vou apenas ficar verificando se a exceção foi lançada, capturada neste log. Então é isso que eu vou tentar verificar aqui nesse teste, especificamente. Vamos agora começar a escrever essa brincadeira. O LogLevel é o log de erro. O event ID não me interessa, então vai ser qualquer um que for definido aqui.
+
+[03:19] Então, isso aqui é o outro cara. Aqui, é a mensagem, no caso, o objeto que vai ser logado. Eu também não estou interessado, porque isso eu vou pegar justamente na exceção. Então, pode ser qualquer objeto. E agora sim, aqui que eu estou preocupado. Eu quero pegar uma exceção específica, um objeto que representa uma exceção específica.
+
+[03:46] Qual é esse objeto? É esse cara aqui. Só que agora eu vou trazer ele para uma variável, "excecaoEsperada". Que vai ser esse cara aqui. E como eu vou fazer a configuração que quando incluir tarefas for chamado, eu vou lançar esse objeto específico de exceção. Então é aqui que eu quero que esse método de log seja chamado. Log de erro, para qualquer evento, para qualquer objeto, mas para essa exceção que foi lançada.
+
+[04:29] E novamente eu vou usar o recurso do it is any, porque não me interessa como que isso vai ser transformado. Então "It,IsAny<Tarefa[]>()))". Então, ficou meio tenso aqui, muitas coisas diferentes aqui. Eu vou recapitular novamente.
+
+[04:57] Nós estamos com um problema do vídeo anterior que é a biblioteca Moq. Ela não permite que nós usemos nas expressões de verify e setup métodos de extensão. Para isso, então, para superar essa limitação. Eu vou usar o método concreto, método que está na interface ilogger.
+
+[05:15] Só que esse método pede vários argumentos. Então, eu tive que passar agora todos esses argumentos que eu espero que sejam executados quando dá exceção no método de teste. Então, quais são esses argumentos? Vou separar um em cada linha aqui, para deixar bem claro para vocês. Então nesse método log, primeiro preciso saber se eu vou fazer um log de erro, debug, informação, alerta, que é warning. Todos esses caras têm métodos de extensão que facilitam nossa vida.
+
+[06:01] Mas como o Moq tem essa limitação, nós precisamos usar esses caras. Então, esse aqui é o nível de erro de log. No caso, se eu fosse chamar o log erro, é esse cara que seria chamado. Aqui é o identificador do evento. Para nós, não interessa. Nesse caso aqui, é o objeto que será logado. No caso, vai ser a mensagem que vai ser logada.
+
+[06:33] Mas eu já estou pegando essa mensagem aqui na exceção e ela será logada. É esse cara aqui que eu quero pegar. E aqui é a função que converte o objeto e a exceção numa string. O log, na verdade, é uma grande string que vai ser colocada lá. Então, essa função pega data, hora e pega também a categoria. Essa é a função que vai fazer isso.
+
+[07:08] Bom, então eu estou verificando aqui que este método log está sendo chamado com um argumento específico de error, nível de error, e a exceção que eu estou lançando aqui.E estou dizendo que eu quero que esse método tenha sido chamado apenas uma única vez. Então, agora, eu acho que nós já conseguimos testar isso. O teste falhou, porém falhou por quê? Porque ele tentou esperar a invocação desse método uma vez, mas ele não foi chamado. Então, por quê? Porque na realidade nós ainda não mexemos no código de produção para poder logar essa exceção.
+
+[08:16] Então, tdd. Estamos fazendo primeiro a nossa verificação de teste e depois mexendo no código de produção. Vou chamar aqui esse Handler execute e aqui, no meu catch, eu quero que o meu logger chame, capture essa exceção que está aqui. Agora eu vou botar uma variável para ela. Capture essa exceção com a mensagem específica da exceção.
+
+[08:47] Esse cara aqui vai ser o objeto lá. Vamos rodar novamente o nosso teste. Agora, o teste passou. Pois quando a exceção foi lançada, ela foi capturada e guardada neste logger. Então, nós agora conseguimos verificar um efeito colateral, um efeito que está acontecendo além do resultado direto que eu esperava. Um caso, a inclusão da tarefa ou então o lançamento de uma exceção.
+
+
+
+
+
+
+
+
+
+
+
+
+
+05 - Conhecendo uma API
+Transcrição
+[00:00] Já aconteceu com vocês, quando vocês pegam um projeto para tocar e encontram uma biblioteca que vocês não conhecem bem? Você não conhece bem como determinados módulos se comportam e precisa fazer alguns testes, que você até vai jogar fora depois, mas para conseguir entender como é que funciona aquela api, classe, e tudo o mais.
+
+[00:30] Então, eu queria mostrar para vocês uma maneira que vocês podem usar, no caso da biblioteca moq, para entender um pouco mais. Aprofundar-se um pouco mais o seu conhecimento através desse recurso. Então, para isso, eu vou usar um novo teste. Eu vou fazer o seguinte, testar a inclusão de uma tarefa usando informações válidas. Eu quero saber o que é que ele vai logar quando eu fizer isso.
+
+[01:04] Será que ele vai logar alguma coisa? Então, observe que eu ainda não sei muito bem qual é a verificação que eu vou fazer, então eu não consigo nem escrever direito qual o nome do meu teste. Isso pode acontecer. Você está criando testes que podem inclusive ser excluídos depois, mas você conseguiu, você adquiriu um conhecimento maior sobre aquela api.
+
+[01:26] Então, eu vou usar mais ou menos um nome parecido aqui. Mas eu ainda não sei o que é que vai acontecer com a informação do logger. Eu sei que o CadastraTarefaHandler exige um logger, mas quando a inclusão não tiver nenhuma exceção, o que é que vai acontecer com esse logger? Não sei, ainda.
+
+[01:50] Então, eu vou usar um teste para aprofundar meu conhecimento sobre uma determinada api. Eu vou copiar aqui o código acima. Mas, nesse caso, eu não vou usar esse repositório aqui. Eu vou criar um mock para isso também. Deixa eu mudar aqui, "var mockLogger".
+
+[02:21] E eu vou criar um mock para simular um repositório de tarefas. "Mock.Object". Então, aqui, eu ainda não sei muito bem qual vai ser o meu assert. É isso que eu estou querendo mostrar para vocês. Provavelmente, quando eu entender melhor isso, vou refazer esse teste com a verificação, com o assert específico, para justamente eu garantir, a partir desse momento, que esse comportamento será seguido. E poder ter teste de regressão e tudo o mais.
+
+[02:58] Mas, eu ainda não sei. Então eu não tenho um assert aqui. O que é que eu quero fazer? Eu quero capturar se vai ter alguma mensagem nesse logger. Então eu vou usar o mock para capturar essa mensagem de log específica nessa situação, nessas precondições de entrada, um cara chamado de TarefaValido.
+
+[03:22] Para isso, eu vou usar um recurso aqui. Vou usar meu setup. Observe que eu não posso, lembre-se disso, usar métodos de extensão no setup e na verificação. Aqui no método anterior, no vídeo anterior, nós isso fizemos na verificação. Mas eu quero agora verificar no método de setup. Também não posso usar métodos de extensão, mas eu posso chamar esse cara que eu já criei. Vamos fazer umas modificações aqui.
+
+[04:13] Então eu tenho esse log, aqui. Vou passar para cá. Aqui é a função. Vamos ver o que é que nós vamos fazer aqui de diferente. Bom, eu quero saber o seguinte, eu vou fazer uma configuração onde eu quero capturar todas as vezes em que esse método for chamado.
+
+[04:45] Então, eu não sei qual nível de log que ele vai ser. Então novamente, eu vou usar essa construção do "It.IsAny". Aqui também, "It.IsAny()". Então, eu estou dizendo o seguinte: "faça uma configuração para o método ilog, para qualquer argumento de entrada".
+
+[05:24] Porém está dando erro aqui, porque eu preciso continuar esse setup. Então, eu vou chamar uma função quando esse método log for chamado. Então aqui, eu tenho esse callback. Vou colocar mais um fechamento de argumento aqui. Então esse callback vai ter que ser uma função que respeite esses argumentos de entrada. Olha o que eu vou fazer é um pouco complicado e eu vou repetir de novo para vocês entenderem.
+
+[05:59] Eu vou criar um delegate, que é uma função que tem esses mesmos métodos de entrada aqui, mesma assinatura. Vou colocar aqui em cima. Delegate, que retorna void, porque esse método log retorna void. E e vou falar assim, "delegate void CapturalMensagemLog(L)". Esse cara tem a seguinte assinatura, tem um nível de log, um event ID, um objeto que é o state, uma exceção e tem também uma função que converte esse objeto e essa exceção numa "string> function".
+
+[06:54] Então, eu criei um delegate que vai ser usado para capturar quando esse método for chamado. Então, quando esse método for chamado, você chama o callback. Mas, para isso, eu tenho que definir esse callback. Eu tenho que criar uma instância desse tipo.
+
+[07:16] Então, vamos colocar aqui "CapturaMensagemLog captura = (level, eventId, state, exception, func) =>", que vai executar este bloco de código que está aqui. Então, novamente, o meu objetivo é entender o que é que está acontecendo por baixo dos panos na chamada desse método Handler.Execute, para quando as informações sobre uma tarefa são válidas. Eu ainda não sei o que está acontecendo.
+
+[08:21] Então, primeiro, eu chamei uma função aqui, criei aqui um setup onde eu vou capturar quando esse método for chamado. Então, quando esse método for chamado, ele vai, também, chamar essa função aqui de callback. E eu posso ler essas informações que estão aqui. Vamos começar. Eu vou ler qual é o nível que está sendo chamado para esse callback.
+
+[08:57] Então, "Loglevel levelCapturado" Eu vou colocar LevelCapturado, misturando inglês com português. Capturei esse cara. E aqui, no meu assert, eu posso fazer um assert equal. Pode ser qualquer coisa, vou botar aqui LogLevel. Será que é informação? Será que esse cara é?
+
+[09:42] Está dando erro aqui, mas por quê? Porque não foi atribuído e pode dar problemas. Vou decidir aqui um LogLevel qualquer. Vou botar um que eu acho que não vai dar. Para dar erro de exceção. Para falhar esse teste aqui. Então eu estou colocando um nível de erro, porque é o que eu não espero que aconteça. E, eu estou verificando a informação que está sendo capturada.
+
+[10:09] Então, vamos executar este método aqui. Na hora que ele executou esse teste, falhou. Por quê? Porque ele estava esperando uma informação e atualmente é um debug. Então, olha o aprendizado que vocês tiveram. Vocês tiveram um feedback relativamente rápido de o que está acontecendo dentro daquele método, especificamente. Inclusive com alguns argumentos, você pode capturar os argumentos que estão sendo chamados naquele método, especificamente.
+
+[10:53] Então, agora eu sei que ele chama. Quando dá tudo certo, sem exceção, ele chama o log de debug. Então eu posso agora fazer esse teste passar, porque eu sei que agora é debug, mas eu quero saber qual é a mensagem que é capturada? Então eu vou dar um "string mensagemCapturada = string.Empty". Vou colocar ela como uma string vazia por enquanto e vou agora capturar essa mensagem usando a função que recebe o state e a exception como argumento de entrada, transforma-se numa string.
+
+[11:40] E eu vou dizer aqui no meu assert equals (assert.equal), que a mensagem tem que ser "tarefa incluída". Não sei qual é a mínima, então eu estou tentando aprender "on the fly". Mensagem capturada. Vamos executar novamente esse teste. Falhou. Por quê? Porque ele esperava a mensagem "tarefa incluída", mas o nome é "Persistindo a tarefa". Olha que interessante.
+
+[12:15] Então, eu posso chegar aqui agora e colocar a mensagem "Persistindo a tarefa". Posso fazer até melhor. Agora eu posso inverter o processo. Eu posso dizer o seguinte, "eu quero que quando essa mensagem de debug, mas para sucesso, de uma persistindo a tarefa for incluída, ela contenha o título da tarefa lá".
+
+[12:46] Então, aqui eu já sei qual é o título da tarefa, repara aqui, estudar XUnit. Então, eu quero aqui estudar XUnit apareça dentro da mensagem capturada. Existe um método de assert para isso. Eu posso dizer que eu espero que essa substring esteja dentro dessa string aqui que é a mensagem capturada dentro do log.
+
+[13:13] Então, vai falhar. Nós já sabemos que esse método teste vai falhar. Porque o valor é "Persistindo a tarefa" e ele não encontrou "Estudar XUnit" nesse cara aqui. Mas agora, eu posso fazer isso acontecer. No meu método de execução, eu tenho LogDebug persistindo a tarefa. Ora, eu posso fazer isso: "Persistindo a tarefa", "tarefa.Título". Será que isso vai fazer com que o teste passe?
+
+[13:59] Entenderam a jogada? Então, primeiro eu usei um teste para poder entender o que está acontecendo por baixo dos panos naquela execução do teste. Eu só consegui fazer isso porque eu tinha a dependência. Eu tinha o controle sobre os objetos que aquele sistema subtest estava dependendo. Então eu capturei essas informações e usei para aprender mais sobre api e depois eu usei essas informações para sugerir uma modificação no código de produção.
+
+[14:40] Agora, esse teste vai ficar, inclusive, disponível para isso. Vai ficar disponível para garantir que agora, toda vez que uma tarefa for bem-sucedida, ela precisa logar, chamar o método Log para o nível de Debug e, incluir nessa mensagem capturada, o título da tarefa.
+
+[15:07] Então, eu vou fazer uma mudança para vocês verem que não estou mentindo. "títuloTarefaEsperado". Vou colocar aqui "Usar Moq Para Aprofundar Conhecimento Api" como nome da tarefa. E vou colocar esse título como título tarefa esperada. E eu espero que esse título tarefa esperada esteja dentro da mensagem capturada de log.
+
+[15:54] Vamos ver se está funcionando. Vou executar novamente o teste. Funcionou. Então agora eu tenho justamente um novo teste onde eu capturei a mensagem de log e verifiquei algumas expectativas que eu tinha em relação a essa mensagem, especificamente.
+
+
+
+
+
+
+
+
+
+
+06 - Recapitulando
+Transcrição
+[00:00] Então, nessa aula nós conhecemos o último tipo de dublê para teste. E, esse tipo é um cara chamado Spy. A diferença é justamente porque no spy fazemos uma verificação mais em cima de um objeto simulado, um mock object, que está indiretamente ligado aquele teste.
+
+[00:25] Então, nós estamos verificando, na verdade, os efeitos colaterais. Você pode perceber essa diferença na verificação da expectativa. Então, aqui nesse exemplo, nós fizemos um teste que nós lançávamos uma exceção e verificávamos se o resultado do teste, o command result, trazia falso naquela propriedade is success.
+
+[01:00] Então, nós usamos um stub para poder injetar uma exceção quando o método incluir tarefa foi chamado. O spy é diferente justamente porque a expectativa está no efeito colateral. Então, quando uma exceção for lançada, eu não quero saber se o resultado é falso. Na verdade, eu quero saber se a mensagem da exceção foi logada.
+
+[01:29] Isso, então, é uma outra diferença que acontece aqui. A pessoa que está com a necessidade de verificar esse teste é o próprio desenvolvedor. É o cara que fez essa biblioteca ou alguém que está testando ela. Nesse caso aqui, é uma expectativa de um arquiteto, um cara que esteja fazendo a manutenção dessa aplicação. É o cara que vai querer saber quando acontece alguma exceção que existe realmente aquele log para ele poder fazer a sua própria análise.
+
+[02:04] Então, todos os testes são válidos e essas necessidades precisam ser atendidas. Então, vocês vão ver que a verificação em si é muito parecida com a verificação de um mock. Por isso, eu coloquei a diferença no próximo slide. A verificação do mock também usa o verify para o teste e a quantidade de vezes que aquele método foi usado.
+
+[02:33] É a mesma coisa aqui também. A diferença é justamente no objeto que você está verificando. De um lado, no moq, eu estou fazendo a verificação em cima do objeto principal, o repositório de tarefas. E aqui, eu estou fazendo a verificação em cima de um objeto que não faz parte do negócio, que é fazer a inclusão da tarefa. Mas, ele também é importante quando acontecem algumas situações específicas.

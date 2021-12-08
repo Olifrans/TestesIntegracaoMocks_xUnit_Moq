@@ -1,0 +1,148 @@
+01 - Objetivos da aula
+PRÓXIMA ATIVIDADE
+
+Às vezes não sabemos como determinada classe se comporta, que métodos e em que ordem ela chama internamente na hora de executar determinado caso de uso.
+
+Como testar o comportamento de nossas classes?
+Nessa aula você estará apto a responder essa pergunta e usar o Moq para criar testes com esse tipo de verificação. Assim, irá conhecer mais um padrão de simulação utilizado nos testes de integração.
+
+
+
+
+02 - O método foi chamado
+Transcrição
+[00:00] Vamos começar mais uma aula. Eu peço para vocês que abram o teste onde nós verificamos a execução do caso de uso de gerenciamento de prazo de tarefas. Se atente ao seguinte: aqui eu tenho um teste, apenas, onde eu crio uma massa de dados e verifico, se a quantidade de tarefas que foi colocada em atraso é 5. Isso porque eu defini uma massa de teste bastante específica aqui.
+
+[00:36] Agora, eu quero criar outro teste e eu quero entender como a execução desse caso de uso foi feita. Então ele pegou cada tarefa e atualizou o seu status. E, mandou essa tarefa ser atualizada no banco de dados. Então, se eu tenho cinco tarefas, eu vou ter cinco vezes a chamada para eu atualizar tarefas.
+
+[01:18] Será que é isso? Será que isso não é problema de performance? Toda hora indo lá, mandando para o banco de dados esse update? Será que eu não posso fazer isso de uma maneira mais otimizada? Então, será que eu consigo fazer esse tipo de teste? Na verdade, eu quero testar se o método foi chamado, inclusive quantas vezes esse método foi chamado.
+
+[01:36] Vamos verificar essa possibilidade aqui. Então eu vou criar um novo teste, public void. Qual é o nome que eu estou usando aqui? Quando a tarefa estiver atrasada, deve mudar seu status. Vou fazer o seguinte: "QuandoInvocadoDeveChamarAtualizarTarefasNaQtDeVezesDoTotalDeTarefasAtrasadas". Quando invocado, deve chamar atualizar tarefas quantidade de vezes, na quantidade de vezes do total de tarefas atrasadas.
+
+[03:11] Então, se eu tenho cinco tarefas atrasadas, ele deve chamar cinco vezes atualizar tarefas. Esse é o teste que eu estou querendo fazer aqui. E eu quero usar o nosso novo brinquedinho, que é a biblioteca Mock. Vamos fazer isso. Então nós teremos que mockar o repositório tarefas, mas agora, para uma situação diferente.
+
+[03:34] Então, vamos fazer o seguinte: eu vou copiar o comando. Eu preciso agora definir o repositório. Então no arrange, vou ter que criar um mock. Não existe ainda, então eu vou importá-lo para o iRepositório. Repositório de tarefas. E vou pegar aqui um objeto desse mock.
+
+[04:11] Pronto, está compilando. Mas agora eu preciso configurar algumas coisas. Então, esse mock, vai ser um stub porque eu vou ter que injetar. Terei que colocar algumas informações para o meu repositório. Vamos fazer um setup aqui. Esse setup vai ser o seguinte: quando o método "obtém tarefas" for executado. Obtém tarefas está com erro, mas por quê?
+
+[04:49] Eu tenho que dizer aqui o tipo. Is any. Is any de quê? Do func tarefa que retorna um booleano. Ok, deixa eu só importar aqui o método, "mock.Setup(r => r.ObtemTarefas(It.IsAny<Func<Tarefa, bool>>()))". Está faltando mais um carinha aqui.
+
+[05:29] Então, eu vou fazer setup. Mas, agora ele vai retornar. O que é que ele tem que retornar? Um enumerável de tarefa. E esse enumerável vai estar aqui na massa inicial ou tarefas. Então, eu vou criar aqui minhas tarefinhas, uma lista de tarefas. New list de tarefa e essa lista de tarefa eu vou copiar aqui. Vou criar 3 tarefas atrasadas.
+
+[06:24] Vou colocá-las aqui. Então são três tarefas que estão atrasadas. Não me importo com a categoria, ela pode ser qualquer uma. Dummy aqui. Eu vou criar uma só categoria, para ficar "var categ = new Categoria("dummy")". Aqui vai ser a tag. Aqui também, e aqui também. Então eu criei uma lista de tarefas que está prestes a ficar atrasada.
+
+[07:12] Eu configurei o meu mock para quando obtém tarefas for chamada para qualquer predicado, para qualquer filtro, ele retornar essa listinha com três tarefas. Então são três tarefas. Eu preciso achar alguma maneira de verificar se foi três vezes que o nosso repositório atualizar tarefas foi chamado.
+
+[07:49] Como é que eu faço isso? Será que eu tenho uma maneira de executar isso, de testar isso usando a nossa ferramenta de mock? Temos, temos sim. Só que em vez de nós fazermos isso usando o objeto que ele retornou, nós vamos usar justamente o objeto mock. Então, eu vou falar aqui: "Assert.Equal(3, mock.Verify(r => r.AtualizarTarefas(It.IsAny<Tarefa[]>))."
+
+[08:38] Verifique quantas vezes esse cara foi chamado. "Times.exactly(3)". Só há um problema aqui, esse verify não é um assert. Não precisa ser chamado dentro de um assert. Eu simplesmente chamo esse verify aqui sem precisar fazer o assert.
+
+[09:12] Então, vamos recapitular: eu criei um cenário onde eu fiz um stub retornando três tarefas ao executar o método "obtém tarefas". Eu configurei isso, deixei configurado por esse mock. Então eu chamei o método que eu quero testar, o sut. O sistema subtest aqui, e, quando eu fiz a verificação, eu observei se o atualizar tarefas foi chamado exatamente três vezes para qualquer array de tarefas.
+
+[09:55] Então, eu não preciso fazer um assert equal três, porque esse verify já usa o assert. Então, vamos executar o teste. Houve uma falha aqui. Então, ele esperava a invocação do mock exatamente três vezes, mas foi apenas uma vez. Ele chamou apenas uma vez o atualizar tarefas.
+
+[10:34] Por que isso? Porque, na verdade, a execução desse cara aqui, chama apenas uma vez para todas as tarefas do array. Então ele é um pouco mais otimizado. Nós achávamos que ele que tinha um comportamento, mas, na verdade, ele já está otimizado. A execução desse caso de uso aqui está apenas uma vez passando todo o array de uma vez só. Isso é bom.
+
+[11:06] Então, na verdade, eu tenho que verificar que ele é exatamente uma vez. Ou, existe um método chamado "Once" para quando eu quero exatamente uma vez. Vou executar novamente esse teste e vamos verificar, agora, ele vai passar. Porque ele foi realmente chamado apenas uma vez.
+
+[11:38] Então, nós conhecemos aqui uma outra. Observe que existe uma outra maneira aqui, onde eu estou colocando a integração desse repositório. Não só como um stub. Eu também estou verificando se o comportamento desse método sobre teste está sendo seguido sob determinadas condições.
+
+[12:03] Nesse exemplo, é: "atualizar tarefas" está sendo chamada apenas uma vez. Então, eu estou tentando verificar o comportamento desse método. Vocês vão ver que isso é um outro tipo de teste, de dublê de teste. Nós vamos falar sobre isso mais tarde.
+
+[12:23] Então, outra coisa que você precisa entender é: agora eu estou atuando não só no arrange, na criação, configuração do mock, mas também na verificação de algumas pós-condições do nosso mock.
+
+
+
+
+
+03 - Outro exemplo
+Transcrição
+[00:00] Vamos fixar, então, essa ideia de que nós podermos verificar o comportamento de determinado recurso que está mockando. Eu vou fazer isso através de um novo teste. Vou criar uma classe que vai testar aquele último caso de uso que nós ainda não verificamos. ObtemCategoriaPorIdExecute. Então, esse teste aqui vai verificar aquele caso de uso que pega uma categoria através de um ID.
+
+[00:34] Vou importar logo no Space do XUnit e do Moq, um aqui e outro aqui. E o teste é: "public void QuandoIdForExistenteDeveRetornarCategoriaValida()". O nosso arrange está aqui: nosso act e nosso assert. Então o nosso act vai ser o "handler.Execute(comando)", passando o comando que representa esse caso de uso.
+
+[01:33] Então aqui no meu arrange, eu vou primeiro dizer uma categoria. "var idCategoria = 20" por exemplo. O comando "var comando = new CategoriaPorId(idCategoria)". Então, nós temos que essa classe aqui. Aqui é "ObtemCategoriaPorId" lá dos meus comandos.
+
+[02:07] Agora, eu preciso também criar um handler que vai ser um "new ObtemCategoriaPorIdHandler". Isso. E esse cara, está precisando de um repositório. Eu preciso de um repositório para ser acessado. Então, eu vou passar aqui o repositório e vou criar esse outro. Ele vai ser mockado usando o nosso framework mockill.
+
+[02:43] Então, vamos fazer um mock "var mock = new mock()". Tenho que importar esse namespace. E, o repositório aqui, vai receber o mock object, ou propriedade de mock object. Eu estou fazendo o meu arrange. Então, agora eu fiz aqui meu act, na verdade é "mock.Verify(r => r.ObtemCategoriaPorId(idCategoria), Times.Once())". E isso foi feito apenas uma única vez.
+
+[03:31] Eu até fiz besteira aqui. Na verdade, esse nome aqui não está legal, porque a verificação não é essa categoria válida. "DeveChamarObtemCategoriaPorIdUmaUnicaVez". Então, a verificação e as condições de entrada determinam o nome do método. Nós já vimos isso várias vezes aqui. Então, eu estou tentando ser consistente com o que nós viemos falando.
+
+[04:08] Recapitulando: criamos aqui uma variável que vai ter o ID de categoria. Depois, criamos o comando e fizemos um mock para o repositório de tarefas. Criamos o Executor desse comando e chamamos a execução dele. E, eu verifiquei se dentro do repositório, o método "obtem categoria por ID" foi chamado especificamente para o valor 20. E isso foi feito apenas uma vez.
+
+[04:37] Então, vamos executar esse cara aqui. Executar testes. Vamos ver se vai precisar fazer alguma coisa. Reconheceu todo mundo, está executando esse cara. Pronto, já executou. Vamos lá de novo: fixamos aqui a nossa ideia de mock, justamente onde você precisa de um dublê de teste para verificar determinado comportamento.
+
+[05:09] Então, eu estou mockando o repositório de tarefas e quero saber se o método foi chamado para um argumento específico e uma quantidade de vezes específica.
+
+
+
+
+
+
+
+04 - Recapitulando
+Transcrição
+[00:00] Esse é um vídeo bem rapidinho para nós recapitularmos o que foi visto nessa aula. Nós conhecemos, nesta aula, mais um tipo de dublê para teste. Os mock object. A diferença está justamente na necessidade que você tem para o seu teste. Então, nesse teste aqui, nesse cenário, especificamente, eu queria verificar justamente o comportamento do meu recurso que estava sendo mockado, simulado.
+
+[00:28] Eu queria verificar se o meu repositório tarefas estava chamando o método "obter categoria por ID" com o ID de categoria número 20, e isso foi chamado apenas uma vez. Então, a necessidade que eu tinha para esse teste era verificar o comportamento. E, eu tive que usar um mock object. Diferentemente de um stub, onde eu tive que configurar um valor de entrada que seria utilizado pelo meu teste.
+
+[00:59] Então, eu tenho essas duas diferenças: essa distinção do stub, onde eu configuro na minha fase de arrange, e o mock, onde eu verifico na fase de assert.
+
+
+
+
+
+
+
+
+
+05 - Fakes, Stubs e Mocks
+PRÓXIMA ATIVIDADE
+
+Com base nas afirmações abaixo, escolha a alternativa correta.
+
+Um Fake é uma simulação de um recurso caro e pesado. Podemos criar nossa própria classe ou usar alguma já existente em nossos testes
+Um Stub é uma simulação que precisa ser configurada para injetar valores de entrada no cenário de teste
+Um Mock é uma simulação onde podemos verificar quantas vezes um determinado método foi chamado
+A quantidade de vezes que um método é chamado é verificada pelo código Assert.Equal(n, mock.Times())
+O InMemoryDatabase é um exemplo de Stub porque precisamos configurar o contexto para utilizá-lo
+Selecione uma alternativa
+As alternativas 4 e 5 estão erradas.
+
+
+
+
+
+
+
+
+06 - Faça como eu fiz na aula
+PRÓXIMA ATIVIDADE
+
+Chegou a hora de você fixar os conhecimentos apresentados nessa aula implementando todos os passos que realizei durante os vídeos.
+
+crie um novo teste para verificar quantas vezes o método AtualizaTarefas() foi chamado
+para isso configure o mock para injetar uma lista de tarefas quando ObtemTarefas for chamado
+na fase de assert verifique a qtde de vezes usando mock.Verify() e o Times.Once()
+
+
+
+
+
+
+
+07 - Projeto atual
+PRÓXIMA ATIVIDADE
+Baixe o código com o que fizemos até aqui!
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/04/testes-integracao.video4.2.zip
+
+
+
+
+
+
+08 - O que aprendemos?
+PRÓXIMA ATIVIDADE
+
+Nessa aula você aprendeu que existem situações em que precisamos verificar o comportamento das classes sob testes. Para isso usamos o padrão Mock onde, na fase de Assert, verificamos se determinado método foi chamado e em que frequência.
