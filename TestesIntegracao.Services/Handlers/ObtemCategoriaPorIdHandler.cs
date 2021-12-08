@@ -6,11 +6,11 @@ namespace TestesIntegracao.Services.Handlers
 {
     public class ObtemCategoriaPorIdHandler
     {
-        private readonly IRepositorioTarefas _repo;
+        IRepositorioTarefas _repo;
 
         public ObtemCategoriaPorIdHandler(IRepositorioTarefas repositorio)
         {
-            this._repo = repositorio;
+            _repo = repositorio;
         }
         public Categoria Execute(ObtemCategoriaPorId comando)
         {

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 using Moq;
-using TestesIntegracao.Core.Commands;
-using TestesIntegracao.Infrastructure;
-using TestesIntegracao.Services.Handlers;
+using Alura.CoisasAFazer.Infrastructure;
+using Alura.CoisasAFazer.Core.Commands;
+using Alura.CoisasAFazer.Services.Handlers;
 
-namespace TestesIntegracao.Tests
+namespace Alura.CoisasAFazer.Testes
 {
     public class ObtemCategoriaPorIdExecute
     {

@@ -1,15 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
+using Microsoft.Extensions.Logging;
+using TestesIntegracao.Infrastructure;
 using TestesIntegracao.Core.Commands;
 using TestesIntegracao.Core.Models;
-using TestesIntegracao.Infrastructure;
 
 namespace TestesIntegracao.Services.Handlers
 {
     public class CadastraTarefaHandler
     {
-        private readonly IRepositorioTarefas _repo;
-        private readonly ILogger<CadastraTarefaHandler> _logger;
+        IRepositorioTarefas _repo;
+        ILogger<CadastraTarefaHandler> _logger;
 
         public CadastraTarefaHandler(IRepositorioTarefas repositorio, ILogger<CadastraTarefaHandler> logger)
         {
@@ -17,7 +17,7 @@ namespace TestesIntegracao.Services.Handlers
             _logger = logger;
         }
 
-        public ComandResult Execute(CadastraTarefa comando)
+        public CommandResult Execute(CadastraTarefa comando)
         {
             try
             {
@@ -32,13 +32,13 @@ namespace TestesIntegracao.Services.Handlers
                 );
                 _logger.LogDebug($"Persistindo a tarefa {tarefa.Titulo}");
                 _repo.IncluirTarefas(tarefa);
-                return new ComandResult(true);
+                return new CommandResult(true);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, e.Message); //Log de exceção
-                return new ComandResult(false);
-            }            
+                _logger.LogError(e, e.Message);
+                return new CommandResult(false);
+            }
         }
     }
 }

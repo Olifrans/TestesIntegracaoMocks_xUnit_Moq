@@ -6,9 +6,9 @@ namespace TestesIntegracao.Core.Commands
     /// <summary>
     /// Informações necessárias para cadastrar uma tarefa.
     /// </summary>
-    public class CadastraTarefa
+    public class TTTCadastraTarefa
     {
-        public CadastraTarefa(string titulo, Categoria categoria, DateTime prazo)
+        public TTTCadastraTarefa(string titulo, TTTCategoria categoria, DateTime prazo)
         {
             Titulo = titulo;
             Categoria = categoria;
@@ -16,7 +16,7 @@ namespace TestesIntegracao.Core.Commands
         }
 
         public string Titulo { get; }
-        public Categoria Categoria { get; }
+        public TTTCategoria Categoria { get; }
         public DateTime Prazo { get; }
     }
 }

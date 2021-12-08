@@ -1,0 +1,76 @@
+01 - Objetivos da aula
+PRÓXIMA ATIVIDADE
+
+Um projeto bastante comum com que trabalhamos é o desenvolvimento de uma aplicação AspNet Core.
+
+Em geral um controlador AspNet Core possui métodos que dependem de vários recursos como os utilizados e mostrados nas aulas anteriores (repositórios de dados e sistemas de log), mas também de outros como por exemplo servidores de email, sistemas de arquivos, serviços web, etc.
+
+Como testar nossos controladores AspNet Core?
+Nessa última aula vamos aplicar os conhecimentos adquiridos no curso para testar um método que cadastra uma tarefa.
+
+Vamos lá?
+
+
+
+
+
+
+02 - Aplicando no AspNet Core
+Transcrição
+[00:00] Vamos pegar tudo o que nós aprendemos nessas últimas cinco aulas e aplicar nessas ideias. Vamos fixar elas ideias em um projeto que está mais próximo da nossa realidade, que é um projeto web, asp.net Core. O que eu quero fazer aqui é pegar um controlador, especificamente uma action, e fazer alguns testes nela.
+
+[00:25] Então, está aqui o projeto, web api. E também o controlador que é o TarefasController, que está usando aqueles casos de uso GerenciarTarefa, Cadastrar e tratar. Inclusive, está com erro, porque eu deixei de lado esse projeto. Nós fizemos várias modificações no design das classes de handlers para podermos começar a injetar as dependências. E, não fez alterações aqui, justamente, para deixar tudo para cá, para esse momento.
+
+[00:57] Então, a primeira coisa é o seguinte, eu quero testar essa classe e esse método aqui, que representam a inclusão de uma nova tarefa. Então, se eu faço um post no controlador tarefas, basicamente, quando eu fizer assim "POST/tarefas { info }", umas informações no corpo dessa requisição, ela vai bater aqui nessa action e nós vamos ver o que vai acontecer.
+
+[01:35] Então, eu quero fazer testes para condições em que vai dar algum tipo de erro ou de problema. A primeira coisa é criar a minha classe de teste e ela vai usar aquela nossa conversão, tentando ser bastante consistente na nossa abordagem da nomenclatura de teste.
+
+[02:11] Nome da classe e método que está sendo testado. Então, o nome da classe é TarefasController e o nome do método é EndPointCadastraTarefas. Então esse é o método sob teste, esse cara aqui. Então, agora temos uma nova classe que representa os testes que eu vou fazer nesta classe. Então, eu vou ter aqui o primeiro teste. Vou colocar aqui "teste", porque eu não estou preocupado com o nome, agora.
+
+[02:48] Já vou importar aqui meu XUNIT. Também vou importar minha biblioteca de moq. Qual será o meu arrange, o act, o assert. Definido isso, você tem o seu teste. Então, esse padrão, eu tenho batido nessa tecla nessas aulas e nos cursos anteriores que eu falei sobre teste, é um padrão que te ajuda. É uma estrutura em que você consegue confiar e consegue criar seus testes de uma maneira bastante fluída.
+
+[03:31] Então, cenário de entrada, condição de saída que eu quero testar, e aqui é o método sob teste. O método sob teste é o "controlador.EndPointCadastraTarefa()". Então, eu preciso primeiro criar um controlador aqui no meu arrange "var controlador = new TarefasController". Esse é o nome da classe. Vou precisar adicionar no meu namespace. E ele está dizendo que não tem, porque, provavelmente, este projeto não está aqui.
+
+[04:16] Vamos colocar esse cara aqui como uma referência web.api. Coloquei esse projeto aqui e agora eu vou importar aqui "using.Alura.CoisasAFazer. WebApp.Controllers". Está dando erro. Por quê? Vamos ver aqui no índice de erros.
+
+[05:01] O projeto Alura não é compatível com o NETCore 2.1. Não, eu quero que esse cara aqui seja 2.2. Eu vou abrir esse cara e vou mudar aqui para 2.2, que é o meu target framework. Selecionei, agora tudo aqui passou, tudo voltou a funcionar.
+
+[05:35] Eu tenho meu projeto web api e consegui construir aqui meu controller. E agora, eu vou chamar meu act. Eu preciso passar aqui, então, agora um modelo. E esse model, é do tipo new CadastraTarefaVM. Só para vocês verem que eu não estou mentido. É nessa classe aqui que eu preciso criar um objeto.
+
+[06:09] Só que ela não existe aqui. Não está sendo reconhecida porque eu preciso importar o namespace, "CoisasAFazer.WebApp.Models". Consegui criar. E agora, eu vou dizer que o model tem um ID de categoria. Vou colocar aqui 20. Vou dizer que o model tem um título para não ficar diferente vou colocar "Estudar XUnit" e o prazo. O prazo dessa tarefa é o final deste ano. Passei aqui o meu model. Aqui está dando erro. "Action result está definida sempre que não referenciado".
+
+[06:56] Instalar pacote. Localizar e instalar a versão mais recente, colocou aqui no meu pacote do Nuget a dependência com aspNetCore.Mvc, de fato, porque eu preciso. Qual é o assert que eu quero ter? O assert passando informações válidas. O tipo desse retorno é um "OkResult>(retorno)". Então, recapitulando, fizemos várias coisas diferentes, criei esse teste aqui, para poder executá-lo, eu tive que criar um controlador, tive que criar um modelo para poder passar aqui para esse método.
+
+[08:00] Peguei o resultado da execução do método, retorno, e minha expectativa é que eu estou passando dados válidos de uma tarefa. Então, a minha expectativa é que esse tipo seja um ok result. Então, agora eu já posso mudar meu nome aqui para isso "DadaTarefaComInformaçõesValidasDeveRetornar200". Esse ok result, representa o código http, o de status 200.
+
+[08:42] Então, agora, os testes que nós estamos fazendo numa api, estão mais associadas ao retorno. Eu vou verificar o código de status da resposta. Então, nesse caso aqui, o código tem que ser 200. É a minha verificação. Vamos executar esse teste aqui e vamos ver o que é que vai acontecer.
+
+[09:13] Deu erro de build. Eu esqueci de corrigir aqueles caras lá. Obter categoria por ID handler exige um repositório de tarefas. Então, eu vou ter que passar esse cara aqui com o argumento desse construtor. E o que é que eu faço? Nós já vimos que criar esse objeto na mão, nessa classe, não é bom para teste, porque é uma classe que depende de outra e eu preciso dar maior flexibilidade.
+
+[09:51] Então, o TarefasController precisa pedir que alguém forneça uma implementação de iRepositório tarefa. Vou fazer isso através do construtor "IRepositorioTarefas_repo".
+
+[10:17] Aqui, ele não pede logger, mas vai pedir um logger para CadastrarTarefaHandler. Então, o que eu vou pedir aqui é um "Ilogger". Vou chamar esse cara de "_logger" e oque eu preciso é importar o namespace Microsoft Extensions login.
+
+[10:51] Vou pegar isso tudo aqui. Selecionei. E agora vou pedir para ele gerar um construtor com esse cara para mim. Então, agora eu estou pedindo para esses objetos serem injetados via construtor e então, vou usar esses caras aqui nos construtores. Então, agora, passei a bola para quem estiver criando o TarefasController e chamando o método EndPointCadastraTarefa.
+
+[11:28] Quem costuma fazer isso em produção é o próprio aspnet core. O asp.net core já tem um container de injeção de dependência. Então ele já vai saber que, quando precisar criar a TarefaController, precisa criar objetos desse tipo aqui. Tudo bem, aspnet core, deixa ele resolver o problema dele e nós agora precisamos resolver o nosso.
+
+[11:54] Agora, não está mais funcionando o meu teste, porque eu preciso passar um repositório tarefas e um ilogger como argumentos de construtor de TarefasController. O que é que eu vou fazer? Vou usar o meu mock. Então, estamos aplicando todos aqueles conceitos que nós estávamos vendo: injeção de dependência, mock, e vamos também, agora, descobrir quais são os tipos que eu vou precisar.
+
+[12:25] Eu vou precisar de um repositório fake? Vou precisar de um stub? O que é que eu vou fazer aqui? Vamos ver. Vou passar aqui o mock para o ilogger "mockLogger = new Mock<Ilogger>()". Vou ter que importar esses caras aqui. Criei esse cara e vou criar também um repositório. Mas para esse repositório eu vou usar, por enquanto, o InMemoryDatabase. Somente para nós podermos fazer aquela fixação legal.
+
+[13:10] Então, eu preciso de um repositório de tarefa que receba um contexto, "var repo = new RepositorioTarefa(contexto)", lembram disso? Esse contexto, ele vai ser criado a partir da classe DbTarefasContext, "var contexto = new DbTarefasContext(options)", que vai precisar das opções e essas opções vão ser criadas através de um "DbContextOptionsBuilder()". Preciso importar esse cara. Nós estamos no entity framework core.
+
+[14:08] E aqui, eu vou dizer: "UseInMemoryDatabase("DbTarefasContext")", e vou pegar para a propriedade Options que vai me dar uma instância de DbOptions, para passar como esse cara. Então, agora, eu posso passar o repositório aqui e o logger através da propriedade object. Terminou. Conseguimos, então, vamos fazer todo o setup que nós precisávamos para podermos, então, fazer o nosso teste.
+
+[14:43] Demora um pouquinho, mas observe que você vai fazer isso apenas uma vez. Depois, você vai ficar executando esse teste automaticamente. Você vai passar isso para uma ferramenta de automação no seu pipeline de build e tudo o mais. Vamos ver o que é que vai acontecer.
+
+[14:59] Ele vai criar o logger. Será que ele vai inserir? Está executando e falhou. Falhou. O que aconteceu aqui, afinal? Então, ele esperava um ok result, mas no final das contas, ele retornou um not found results. Por quê? Porque, na verdade, esse ID da categoria aqui, precisa representar uma categoria existente dentro do nosso repositório.
+
+[15:34] Então, aqui eu estou chamando um comando que pega uma categoria por um ID e executa o comando. Aqui eu estou criando o comando, aqui eu executo, e depois, eu verifico se a categoria for nula, ele retorna um not found. Eu preciso que este repositório inclua uma categoria.
+
+[15:59] Vou colocar aqui: repositório. Eu não tenho como fazer isso. "Tenho como fazer, Daniel, como assim? Como não?". "contexto.Categorias.Add(new Categoria(20, "Estudo"))". Adicionei esse cara, salvei as mudanças.
+
+[16:36] Então, estou incluindo isso que está aqui na base. De modo que, quando eu chamar esse cara, ele vai encontrar essa categoria que eu acabei de incluir. Será que vai mesmo? Será que vai funcionar? Vamos escutar.
+
+[16:49] Então eu precisei colocar uma carga na base para executar esse teste. Vamos executar os testes. Funcionou. Agora nós temos uma inclusão de uma tarefa, e com isso, ele retornou o 200.

@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace TestesIntegracao.Services.Handlers
+namespace Alura.CoisasAFazer.Services.Handlers
 {
-    public class ComandResult
+    public class CommandResult
     {
-        public ComandResult(bool success)
+        public CommandResult(bool success)
         {
             IsSuccess = success;
         }
+
         public bool IsSuccess { get; }
     }
 }

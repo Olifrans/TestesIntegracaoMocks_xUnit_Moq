@@ -8,11 +8,11 @@ namespace TestesIntegracao.Services.Handlers
 {
     public class GerenciaPrazoDasTarefasHandler
     {
-        private readonly IRepositorioTarefas _repo;
+        IRepositorioTarefas _repo;
 
         public GerenciaPrazoDasTarefasHandler(IRepositorioTarefas repositorio)
         {
-            this._repo = repositorio;
+            _repo = repositorio;
         }
 
         public void Execute(GerenciaPrazoDasTarefas comando)

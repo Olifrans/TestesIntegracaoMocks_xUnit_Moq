@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TestesIntegracao.Core.Commands;
+using Alura.CoisasAFazer.WebApp.Models;
+using Alura.CoisasAFazer.Core.Commands;
+using Alura.CoisasAFazer.Services.Handlers;
 using TestesIntegracao.WebApp.Models;
+using TestesIntegracao.Core.Commands;
 using TestesIntegracao.Services.Handlers;
 
 namespace TestesIntegracao.WebApp.Controllers
@@ -12,6 +15,8 @@ namespace TestesIntegracao.WebApp.Controllers
         [HttpPost]
         public IActionResult EndpointCadastraTarefa(CadastraTarefaVM model)
         {
+
+
             var cmdObtemCateg = new ObtemCategoriaPorId(model.IdCategoria);
             var categoria = new ObtemCategoriaPorIdHandler().Execute(cmdObtemCateg);
             if (categoria == null)

@@ -7,12 +7,12 @@ namespace TestesIntegracao.Infrastructure
 {
     public class RepositorioTarefa : IRepositorioTarefas
     {
-        private readonly DbTarefasContext _ctx;
+        DbTarefasContext _ctx;
 
         public RepositorioTarefa(DbTarefasContext context)
         {
-            this._ctx = context;
-        }        
+            _ctx = context;
+        }
 
         public void AtualizarTarefas(params Tarefa[] tarefas)
         {

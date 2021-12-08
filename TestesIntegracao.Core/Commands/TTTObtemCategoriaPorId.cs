@@ -3,9 +3,9 @@ using TestesIntegracao.Core.Models;
 
 namespace TestesIntegracao.Core.Commands
 {
-    public class ObtemCategoriaPorId: IRequest<Categoria>
+    public class TTTObtemCategoriaPorId : IRequest<TTTCategoria>
     {
-        public ObtemCategoriaPorId(int idCategoria)
+        public TTTObtemCategoriaPorId(int idCategoria)
         {
             IdCategoria = idCategoria;
         }

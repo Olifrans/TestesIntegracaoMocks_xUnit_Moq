@@ -200,3 +200,94 @@ Transcrição
 [02:04] Então, todos os testes são válidos e essas necessidades precisam ser atendidas. Então, vocês vão ver que a verificação em si é muito parecida com a verificação de um mock. Por isso, eu coloquei a diferença no próximo slide. A verificação do mock também usa o verify para o teste e a quantidade de vezes que aquele método foi usado.
 
 [02:33] É a mesma coisa aqui também. A diferença é justamente no objeto que você está verificando. De um lado, no moq, eu estou fazendo a verificação em cima do objeto principal, o repositório de tarefas. E aqui, eu estou fazendo a verificação em cima de um objeto que não faz parte do negócio, que é fazer a inclusão da tarefa. Mas, ele também é importante quando acontecem algumas situações específicas.
+
+
+
+
+
+
+
+07
+O que estou verificando?
+PRÓXIMA ATIVIDADE
+
+Veja o código de teste abaixo e responda qual verificação estamos fazendo através dele.
+
+//arrange
+var tituloTarefaEsperado = "Usar Moq para aprofundar conhecimento de API";
+var comando = new CadastraTarefa(tituloTarefaEsperado, new Categoria(100, "Estudo"), new DateTime(2019, 12, 31));
+
+var mockLogger = new Mock<ILogger<CadastraTarefaHandler>>();
+
+LogLevel levelCapturado = LogLevel.Error;
+string mensagemCapturada = string.Empty;
+
+CapturaMensagemLog captura = (level, eventId, state, exception, func) =>
+{
+    levelCapturado = level;
+    mensagemCapturada = func(state, exception);
+};
+
+mockLogger.Setup(l => 
+    l.Log(
+        It.IsAny<LogLevel>(), //nível de log => LogError
+        It.IsAny<EventId>(), //identificador do evento
+        It.IsAny<object>(), //objeto que será logado
+        It.IsAny<Exception>(),    //exceção que será logada
+        It.IsAny<Func<object, Exception, string>>() //função que converte objeto+exceção >> string)
+    )).Callback(captura);
+
+var mock = new Mock<IRepositorioTarefas>();
+
+var handler = new CadastraTarefaHandler(mock.Object, mockLogger.Object);
+
+//act
+handler.Execute(comando); //SUT >> CadastraTarefaHandlerExecute
+
+//assert
+Assert.Equal(LogLevel.Debug, levelCapturado);
+Assert.Contains(tituloTarefaEsperado, mensagemCapturada);COPIAR CÓDIGO
+Selecione uma alternativa
+
+O nível de log e a mensagem informados ao cadastrar uma tarefa.
+
+
+
+
+
+
+
+
+08 - Faça como eu fiz na aula
+PRÓXIMA ATIVIDADE
+
+Chegou a hora de você fixar os conhecimentos apresentados nessa aula implementando todos os passos que realizei durante os vídeos.
+
+crie um teste para verificar se a mensagem de erro foi registrada no log
+explicite a dependência do logger como um argumento do construtor de CadastraTarefaHandler
+corrija os testes que instanciam a classe acima
+crie um mock para simular uma instância de ILogger<CadastraTarefaHandler>
+verifique se o método Log() foi chamado para a exceção específica que lançamos no arrange
+
+
+
+
+
+
+09 - Projeto atual
+PRÓXIMA ATIVIDADE
+
+Baixe o código com o que fizemos até aqui!
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/05/testes-integracao.video5.4.zip
+
+
+
+
+
+
+
+
+10 - O que aprendemos?
+PRÓXIMA ATIVIDADE
+
+Nessa aula você conheceu o padrão Spy, último tipo de dublê de teste usado para verificar efeitos colaterais no seu teste, como por exemplo a existência de mensagens de log. Ao usar o Moq tivemos que superar a limitação de não poder configurar métodos de extensão.
