@@ -74,3 +74,157 @@ Transcrição
 [16:36] Então, estou incluindo isso que está aqui na base. De modo que, quando eu chamar esse cara, ele vai encontrar essa categoria que eu acabei de incluir. Será que vai mesmo? Será que vai funcionar? Vamos escutar.
 
 [16:49] Então eu precisei colocar uma carga na base para executar esse teste. Vamos executar os testes. Funcionou. Agora nós temos uma inclusão de uma tarefa, e com isso, ele retornou o 200.
+
+
+
+
+
+
+
+03 - Testando exceções
+Transcrição
+[00:00] Bom, no vídeo anterior, nós fizemos um teste para verificar se dadas as informações de tarefas válidas, elas deveriam retornar um ok result, código de status 200. Fizemos esse teste e nós usamos o tipo fake object, com um famoso objeto fake que é o InMemoryDatabase.
+
+[00:26] Então, fizemos isso. Agora eu vou fazer um teste no qual quero testar se vai acontecer alguma exceção aqui quando eu chamar esse método do controlador TarefasController. Vou subir aqui um pouquinho para vocês, fact, void, teste. Por enquanto não vou pensar em um nome. Vamos usar aqui as informações que já estão aqui. Vou copiar tudo e vou fazer as modificações aos poucos.
+
+[01:02] Então, eu vou pegar o mock para o logger. Vou pegar um para o repositório. Nesse caso aqui, eu tenho um problema que eu quero gerar uma exceção quando incluir tarefas for chamado, então eu vou precisar de um stub. E nesse momento aqui, eu vou precisar trabalhar com esse stub usando novamente a bibioteca moq.
+
+[01:27] Então, eu não vou usar o InMemoryDatabase para esse teste, especificamente." va repo = mock.object". Então, eu preciso configurar o meu repositório para quando o IncluirTarefas for chamado. Eu não estou muito preocupado com o argumento de entrada.
+
+[02:07] Poderia, mas não quero. Então, quando ele for chamado para qualquer array de tarefas, ele vai ter que lançar uma exceção assim "Throws(new Exception("Houve um erro"))". Também não estou muito preocupado com a string que está ali, mas quando o IncluirTarefas for lançado, vai lançar uma exceção. Estou passando esse repositório mockado aqui para o meu controlador.
+
+[02:35] Qual é o resultado que eu espero? Não sei, ainda não sei. Então eu vou usar esse teste para poder verificar o que é que vai acontecer. Mas, só para o teste falhar, eu vou colocar aqui um resultado esdrúxulo. Um resultado que eu sei que não vai acontecer, que é o "Assert.IsType(retorno); //400".
+
+[03:11] Então, eu vou executar esse teste aqui e, como eu não sei direito qual a verificação, também não faz sentido definir qual é o nome. Executar testes. Então ele vai executar esse cara aqui e vai falhar, porque ele esperava um "BadRequest" e deu um "NotFound". Esquecemos de definir a categoria, categoria do tipo 20.
+
+[03:36] Então, eu preciso configurar mais uma informação aqui para o meu stub, que é "mock.Setup(r => r.ObtemCategoriaPorId(20)).Returnos(new Categoria(20, "Estudo"))".
+
+[04:05] Então, às vezes, nós precisamos configurar várias vezes. Várias informações de entrada, e continua sendo nosso stub. Vamos voltar aqui e rodar novamente esse teste. Então, deu erro. Porque ele está retornando o OkResult. Como assim? Tinha que dar um erro e está dando um OkResult? O que é que está acontecendo aqui no nosso método CadastraTarefa?
+
+[04:38] Observe aqui que eu simplesmente estou chamando o handler.execute mas eu não estou verificando o retorno desse comando que é "var resultado = handler.Execute(comando)". Se o resultado for bem-sucedido "if (resultado.isSucess) return OK()". Mas, se ele não for bem sucedido, o que é que eu vou fazer? "return StatusCode(500)", que é um erro interno do servidor.
+
+[05:15] Então, eu verifiquei meu teste, que expectativa não está boa e agora eu vou precisar fazer a modificação da minha verificação de expectativa. Então, aqui, tem que ser "StatusCodeResult". E, além disso, eu posso verificar que "var statusCode = (retorno as StatusCodeResult).StatusCode".
+
+[06:03] Eu vou verificar "Assert.Equal(500, statusCodeRetornado)". Deixa eu só fazer a modificação aqui no nome da variável. Então, mudei aqui minha expectativa. Posso agora realmente definir o meu valor, o nome do método.
+
+[06:30] "QuandoExcecaoForLançadaDeveRetornarStatusCode500". Ficou legal? Então eu estou usando stub para primeiro fornecer uma categoria cujo ID é 20. Depois, estou fazendo um stub para poder lançar uma exceção quando o incluir tarefa for chamado.
+
+[07:03] Eu seto aqui todos os valores, chamo o método sob test, recupero esse valor e verifico as minhas expectativas. Vamos ver se está funcionando direito. Quando a exceção for lançada, executar os testes. Vamos ver. E, muito bem, o nosso teste funcionou. E, agora, eu consigo testar o meu controlador inclusive injetando exceções aqui no meu teste.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+04 - Fixando os conhecimentos
+PRÓXIMA ATIVIDADE
+
+Com base nas afirmações abaixo, escolha a alternativa correta.
+
+Testes de integração são testes realizados em classes que dependem de recursos externos ao sistema
+Primeiro passo para um teste de integração é explicitar as dependências da classe sob teste
+Segundo passo dos testes de integração é usar a biblioteca Moq
+Um Stub injeta pré-condições específicas ao cenário do teste
+Um Mock verifica o comportamento de um resultado direto
+Um Spy verifica os resultados indiretos em um teste (efeitos colaterais)
+Selecione uma alternativa
+
+Apenas a alternativa 3 está errada.
+
+
+
+
+
+05 - Para Saber Mais: Livro xUnit Test Patterns
+PRÓXIMA ATIVIDADE
+
+Se você quiser aprofundar os conceitos aprendidos aqui nesse curso uma boa referência é o livro xUnit Test Patterns, de Gerard Meszaros, que discute e apresenta um catálogo dos padrões utilizados em testes automatizados e mais especificamente (no capítulo 11) sobre os padrões para simular dependências discutidos aqui.
+
+
+
+
+
+
+
+
+
+
+06 - Faça como eu fiz na aula
+PRÓXIMA ATIVIDADE
+
+Chegou a hora de você fixar os conhecimentos apresentados nessa aula implementando todos os passos que realizei durante os vídeos.
+
+crie a classe de teste TarefasControllerEndpointCadastraTarefa
+corrija os erros de compilação na action EndpointCadastraTarefa() recebendo o repositório de tarefas como argumento do construtor do controlador
+crie um teste para verificar o código de status Http 200 quando as informações de uma tarefa válida forem inseridas, simulando objetos para o logger (com Moq) e para o repositório (com InMemoryDatabase)
+não esqueça de incluir a categoria com identificador 20
+crie um teste para verificar o código de status Http 500 quando uma exceção for lançada, dessa vez simulando um Stub para o repositório com a biblioteca Moq
+
+
+
+
+
+
+07 - O que aprendemos?
+PRÓXIMA ATIVIDADE
+
+Nessa aula você usou os padrões de dublês de teste conhecidos nas aulas para aplicar em testes num método que representa um endpoint de uma API AspNet Core.
+
+
+
+
+08 - Projeto final
+PRÓXIMA ATIVIDADE
+
+Baixe o código com o projeto final do curso!
+https://caelum-online-public.s3.amazonaws.com/1314-csharp-testes-integracao/06/testes-integracao.video6.2.zip
+
+
+
+
+
+
+
+
+09 - Conclusão
+Transcrição
+[00:00] Chegamos ao fim de mais um curso. O curso de teste de integração, no qual nós precisávamos testar classes que dependiam de recursos externos ao nosso sistema. Então, por exemplo, nós usamos bastante o exemplo de um banco de dados. Mas existem outros serviços, serviços de e-mail, de FTP, servidor web, sistema de arquivos, bibliotecas de terceiros. São recursos que são caros e que são lentos de ser executados.
+
+[00:35] Então, nós precisamos conseguir testar essas classes também. A estratégia que nós usamos para fazer isso nos testes de integração, o primeiro passo é você vai ter que explicitar essas dependências com esses recursos. E nós usamos algumas técnicas para isso, como a de injeção de dependência, onde nós deixamos o controle para quem consumir a nossa classe.
+
+[01:06] E fizemos, também, com que a própria classe deixasse de ter esse controle. Há uma inversão de controle, e a injeção de dependência foi feita através dos argumentos dos construtores das classes. Então, o primeiro passo foi esse: explicitar essas dependências.
+
+[01:22] O segundo passo é você substituir essas dependências desses recursos mais caros por objetos que sejam mais leves e objetos que estejam na sua mão. E para isso, nós usamos os dublês de teste, lembram disso? E nós conhecemos alguns tipos de dublê de teste. Conhecemos o objeto dummy, os fake objects, o inMemoryDatabase com repositório Fake, os stubs, mocks e spys que são objetos que nós podemos criar a partir de bibliotecas, de frameworks específicos para isso.
+
+[02:02] Nós usamos aqui nesse teste, nesse curso, a biblioteca moq, para poder trabalhar justamente com esses três tipos aqui específicos. "Mas Daniel, qual, afinal de contas, é a diferença desses cinco tipos aqui de dublês de teste?" A diferença está justamente no momento em que você vai criar o seu teste.
+
+[02:33] Então eu criei aqui as três fases do nosso teste. Primeira fase onde você define o cenário que vai testar, as pré-condições, condições de entrada. A segunda fase, onde você vai testar, de fato, chamar o método que vai ser testado. E a terceira fase, onde você vai fazer as verificações das suas expectativas.
+
+[03:00] E esses tipos de dublês de testes vão atuar, dependendo do tipo, em fases diferentes. Então, o dummy object é um objeto que você precisa criar, porque ele está no meio do caminho. Mas você não utiliza ele em nenhuma verificação.
+
+[03:17] O fake object é uma estrutura mais leve que você usa justamente para montar o seu cenário. O stub também é utilizado na hora de montar o cenário, mas para injetar informações que vão sensibilizar o seu teste. Então, lançar uma exceção, fornecer um valor de entrada, algum argumento, objeto que seja necessário.
+
+[03:53] Então, o stub é para isso: para fornecer valores para esse mock que está sendo criado na fase de arrange. Já os outros dois, o tipo mock e o tipo spy, são usados na fase de verificação de expectativas. Os mocks, você verifica comportamentos no próprio mock que você está tentando simular. Você faz uma verificação diretamente no seu objeto de teste.
+
+[04:30] E o spy você verifica efeitos colaterais, então é uma verificação indireta. E nós usamos como exemplo no nosso curso os logs. Então, se tiver uma exceção, eu quero que uma mensagem de log seja gerada e tudo mais. Então, isso foi uma maneira de você distinguir cada tipo.
+
+[04:50] Só que eu quero dizer para você o seguinte: não se preocupe em saber qual tipo é qual, isso não importa. O que importa é você criar, realmente, testes que sejam específicos para cenários específicos, você consiga fazer verificações que sejam, que realmente verifiquem aquelas expectativas que você tem.
+
+[05:13] E essas expectativas, elas são baseadas nas necessidades de cada tipo de usuário que você tenha. Por fim, eu quero mostrar para vocês a famosa pirâmide de teste. Eu já mostrei para vocês isso no curso sobre Selenium, onde eu expliquei que existem os testes de interface de usuário que são diferentes dos testes de unidade, porque eles são muito mais caros e muito mais lentos.
+
+[05:44] Os testes de integração, eles ficam no meio do caminho, aqui. Não são tão caros e tão lentos, mas já são mais caros e mais lentos que testes de unidade. E a pirâmide de teste, é justamente uma pirâmide porque você tem maior quantidade de teste de unidade do que teste de integração do que teste de interface do usuário.
+
+[06:09] E as expectativas também são diferentes para cada tipo de teste. A expectativa, o perfil do usuário que está fazendo um teste de unidade é o cara que está de fato fazendo o teste, criando aquele código de produção. Já o cara que está fazendo o teste de integração, as expectativas são de um cara que vai, que está pensando na arquitetura do sistema, em como que o sistema vai se comportar mediante falhas, como é que ele vai usar isso, como é que você vai fazer com que o seu sistema saia de um determinado problema, uma exceção, um timeout.
+
+[06:55] Então, a expectativa é um pouquinho em cima de requisitos não funcionais. E a expectativa nos testes de interface do usuário são expectativas do próprio usuário final, requisitos funcionais aqui.
+
+[07:14] Então, com esses cursos, que eu coloquei como pré-requisitos e esse foi o curso aqui de teste de integração. Nós completamos a pirâmide de teste. E eu espero que vocês tenham ficado satisfeitos e nós vamos nos encontrar ainda em outros cursos da plataforma dotNet.
+
